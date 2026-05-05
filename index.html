@@ -223,13 +223,26 @@
         window.handleSignIn = async () => {
             const provider = new GoogleAuthProvider();
             try {
-                // Note: Popups might fail on file:// protocol
+                // Check if running on file:// protocol
                 if (window.location.protocol === 'file:') {
-                    alert("Aviso: El login de Firebase suele requerir un servidor local (http://localhost). Si el popup no carga, intenta abrir este archivo a través de un servidor local.");
+                    console.warn("Firebase Auth works best with http:// or https://. Popups might be blocked on file://");
                 }
-                await signInWithPopup(auth, provider);
+                
+                const result = await signInWithPopup(auth, provider);
+                console.log("Authenticated successfully:", result.user.email);
             } catch (error) {
                 console.error("Login Error:", error);
+                
+                let message = "Error al iniciar sesión.";
+                if (error.code === 'auth/popup-closed-by-user') {
+                    message = "La ventana de inicio de sesión se cerró antes de completar. Por favor, intenta de nuevo.";
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    message = "Este dominio no está autorizado en Firebase. Añade este dominio en la Consola de Firebase > Auth > Settings > Authorized Domains.";
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    message = "El inicio de sesión con Google no está habilitado en tu proyecto de Firebase.";
+                }
+                
+                alert(message + "\n\nDetalle técnico: " + error.message);
             }
         };
 
