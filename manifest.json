@@ -1,0 +1,17 @@
+{
+  "name": "Dashboard Central",
+  "short_name": "Dash.Central",
+  "description": "Organiza tus proyectos de desarrollo en un solo lugar.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    {
+      "src": "/dashboard_logo_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

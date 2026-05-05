@@ -28,14 +28,7 @@ service cloud.firestore {
     }
 
     match /projects/{projectId} {
-      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-      allow get: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-      allow create: if isSignedIn() && isValidProject(request.resource.data) && (projectId == null || isValidId(projectId));
-      allow update: if isSignedIn() && isOwner(resource.data.ownerId) && 
-                      isValidProject(request.resource.data) &&
-                      request.resource.data.ownerId == resource.data.ownerId &&
-                      request.resource.data.createdAt == resource.data.createdAt;
-      allow delete: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow read, write: if true;
     }
   }
 }
