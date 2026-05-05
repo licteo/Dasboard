@@ -64,8 +64,8 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Auth Protected Content -->
-    <div id="app-root" class="flex-1 flex flex-col hidden">
+    <!-- App Content (Always visible) -->
+    <div id="app-root" class="flex-1 flex flex-col">
         <!-- Navigation -->
         <nav class="h-24 w-full px-12 flex items-center justify-between border-b border-white/5 bg-[#050505] sticky top-0 z-40 backdrop-blur-md">
             <div>
@@ -81,11 +81,7 @@
                         <span id="project-count" class="text-lg font-light tracking-wide">0 Unidades</span>
                     </div>
                     <div class="w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center relative">
-                        <img id="user-avatar" src="" alt="" class="w-full h-full rounded-full object-cover hidden">
                         <div id="user-placeholder" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <button onclick="handleSignOut()" class="absolute -bottom-1 -right-1 w-5 h-5 bg-white text-black rounded-full flex items-center justify-center border-2 border-[#050505] hover:bg-rose-500 hover:text-white transition-colors" title="Cerrar Sesión">
-                            <i data-lucide="log-out" class="w-2.5 h-2.5"></i>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -112,24 +108,11 @@
         </main>
     </div>
 
-    <!-- Login Screen -->
-    <div id="login-root" class="flex-1 flex flex-col items-center justify-center py-20 px-6 hidden">
-        <div class="text-center">
-            <h1 class="serif text-2xl font-semibold tracking-tight italic mb-20 block opacity-50">
-                Dashboard<span class="text-orange-500">.</span>Central
-            </h1>
-            <h2 class="serif text-5xl md:text-7xl font-light tracking-tight mb-8 italic">Organiza tu código.</h2>
-            <p class="text-white/40 max-w-lg mx-auto mb-12 font-light leading-relaxed">
-                Un entorno simplificado para centralizar tus despliegues, herramientas y proyectos personales con la elegancia de un entorno premium.
-            </p>
-            <button onclick="handleSignIn()" class="px-12 py-4 bg-white text-black rounded-full font-bold uppercase tracking-widest text-xs hover:scale-105 active:scale-95 transition-all shadow-2xl hover:shadow-white/10">
-                Acceder con Google
-            </button>
-        </div>
-    </div>
+    <!-- Login Screen (Removed logic below) -->
+    <div id="login-root" class="hidden"></div>
 
     <!-- Floating Action Button -->
-    <button id="fab" onclick="toggleModal(true)" class="fixed bottom-12 right-12 w-16 h-16 bg-white text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all z-50 group flex hidden">
+    <button id="fab" onclick="toggleModal(true)" class="fixed bottom-12 right-12 w-16 h-16 bg-white text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all z-50 group flex">
         <i data-lucide="plus" class="w-8 h-8"></i>
     </button>
 
@@ -172,7 +155,7 @@
     <!-- Footer -->
     <footer class="px-12 pb-12 pt-8 flex flex-col md:flex-row justify-between items-center text-[10px] uppercase tracking-[0.2em] text-white/20 font-semibold gap-4 mt-auto">
         <div class="flex gap-8">
-            <span>Dash.Central Standalone v1.0.4</span>
+            <span>Dash.Central Standalone v1.0.5</span>
             <span class="hidden md:inline">•</span>
             <span>© 2026 Studio Design</span>
         </div>
@@ -186,8 +169,8 @@
     <!-- Firebase SDK via CDN -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             projectId: "gen-lang-client-0123960740",
@@ -203,51 +186,17 @@
         const auth = getAuth(app);
         const db = getFirestore(app, "ai-studio-bf198e37-1b09-4edf-9c9f-d0cf587f23aa");
 
-        let currentUser = null;
         let allProjects = [];
         let searchTerm = "";
 
         // UI Selectors
-        const appRoot = document.getElementById('app-root');
-        const loginRoot = document.getElementById('login-root');
-        const fab = document.getElementById('fab');
         const projectsGrid = document.getElementById('projects-grid');
         const projectCountEl = document.getElementById('project-count');
-        const userAvatar = document.getElementById('user-avatar');
-        const userPlaceholder = document.getElementById('user-placeholder');
         const searchInput = document.getElementById('search-input');
         const projectForm = document.getElementById('project-form');
         const modalOverlay = document.getElementById('modal-overlay');
 
         // Functions
-        window.handleSignIn = async () => {
-            const provider = new GoogleAuthProvider();
-            try {
-                // Check if running on file:// protocol
-                if (window.location.protocol === 'file:') {
-                    console.warn("Firebase Auth works best with http:// or https://. Popups might be blocked on file://");
-                }
-                
-                const result = await signInWithPopup(auth, provider);
-                console.log("Authenticated successfully:", result.user.email);
-            } catch (error) {
-                console.error("Login Error:", error);
-                
-                let message = "Error al iniciar sesión.";
-                if (error.code === 'auth/popup-closed-by-user') {
-                    message = "La ventana de inicio de sesión se cerró antes de completar. Por favor, intenta de nuevo.";
-                } else if (error.code === 'auth/unauthorized-domain') {
-                    message = "Este dominio no está autorizado en Firebase. Añade este dominio en la Consola de Firebase > Auth > Settings > Authorized Domains.";
-                } else if (error.code === 'auth/operation-not-allowed') {
-                    message = "El inicio de sesión con Google no está habilitado en tu proyecto de Firebase.";
-                }
-                
-                alert(message + "\n\nDetalle técnico: " + error.message);
-            }
-        };
-
-        window.handleSignOut = () => signOut(auth);
-
         window.toggleModal = (isOpen) => {
             modalOverlay.classList.toggle('hidden', !isOpen);
             if (isOpen) {
@@ -308,33 +257,11 @@
             lucide.createIcons();
         };
 
-        // Event Listeners
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
-                appRoot.classList.remove('hidden');
-                loginRoot.classList.add('hidden');
-                fab.classList.remove('hidden');
-                
-                if (user.photoURL) {
-                    userAvatar.src = user.photoURL;
-                    userAvatar.classList.remove('hidden');
-                    userPlaceholder.classList.add('hidden');
-                }
-
-                // Subscribe to data
-                const q = query(collection(db, 'projects'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'));
-                onSnapshot(q, (snapshot) => {
-                    allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderProjects();
-                });
-            } else {
-                appRoot.classList.add('hidden');
-                loginRoot.classList.remove('hidden');
-                fab.classList.add('hidden');
-                allProjects = [];
-                renderProjects();
-            }
+        // Data Subscription (Public)
+        const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
+        onSnapshot(q, (snapshot) => {
+            allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderProjects();
         });
 
         searchInput.addEventListener('input', (e) => {
@@ -353,7 +280,7 @@
                     name,
                     description,
                     url,
-                    ownerId: currentUser.uid,
+                    ownerId: 'public',
                     createdAt: serverTimestamp()
                 });
                 projectForm.reset();
