@@ -1,18 +1,297 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard Central</title>
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#050505">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="/dashboard_logo_icon.png">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Central Standalone</title>
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @layer base {
+            body {
+                font-family: 'Inter', sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #050505;
+                color: #EAEAEA;
+            }
+            .serif {
+                font-family: 'Playfair Display', serif;
+            }
+        }
 
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-4px);
+        }
+
+        /* Selection Color */
+        ::selection {
+            background: rgba(249, 115, 22, 0.3);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050505;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #222;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- App Content (Always visible) -->
+    <div id="app-root" class="flex-1 flex flex-col">
+        <!-- Navigation -->
+        <nav class="h-24 w-full px-12 flex items-center justify-between border-b border-white/5 bg-[#050505] sticky top-0 z-40 backdrop-blur-md">
+            <div>
+                <h1 class="serif text-2xl font-semibold tracking-tight italic">
+                    Dashboard<span class="text-orange-500">.</span>Central
+                </h1>
+            </div>
+            
+            <div class="flex items-center gap-10">
+                <div class="hidden md:flex items-center gap-8">
+                    <div class="flex flex-col items-end">
+                        <span class="text-[10px] uppercase tracking-[0.2em] opacity-40 font-semibold">Proyectos Activos</span>
+                        <span id="project-count" class="text-lg font-light tracking-wide">0 Unidades</span>
+                    </div>
+                    <div class="w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center relative">
+                        <div id="user-placeholder" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="flex-1 px-12 py-16 flex flex-col max-w-[1400px] mx-auto w-full">
+            <div class="mb-16 flex flex-col md:flex-row justify-between items-end gap-8">
+                <div>
+                    <h2 class="text-5xl font-light tracking-tight mb-2">Mis Aplicaciones</h2>
+                    <span class="text-sm text-white/40 italic serif block">Sincronizado con Firestore Enterprise DB</span>
+                </div>
+                
+                <div class="relative group w-full md:w-80">
+                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-orange-500 transition-colors w-4 h-4"></i>
+                    <input id="search-input" type="text" placeholder="FILTRAR PROYECTOS..."
+                        class="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-[10px] uppercase tracking-widest font-semibold focus:outline-none focus:border-white/20 transition-all">
+                </div>
+            </div>
+
+            <!-- Projects Grid -->
+            <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <!-- Cards will be injected here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Login Screen (Removed logic below) -->
+    <div id="login-root" class="hidden"></div>
+
+    <!-- Floating Action Button -->
+    <button id="fab" onclick="toggleModal(true)" class="fixed bottom-12 right-12 w-16 h-16 bg-white text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all z-50 group flex">
+        <i data-lucide="plus" class="w-8 h-8"></i>
+    </button>
+
+    <!-- Modal -->
+    <div id="modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div onclick="toggleModal(false)" class="absolute inset-0 bg-[#050505]/95 backdrop-blur-md"></div>
+        <div class="relative w-full max-w-lg glass rounded-3xl p-12 shadow-2xl overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 via-blue-500 to-purple-500"></div>
+            
+            <div class="flex justify-between items-center mb-10">
+                <h2 class="serif text-3xl italic">Nuevo Proyecto</h2>
+                <button onclick="toggleModal(false)" class="p-2 text-white/20 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <form id="project-form" class="space-y-8">
+                <div class="space-y-2">
+                    <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">Nombre de la Aplicación</label>
+                    <input type="text" id="p-name" required class="w-full bg-white/5 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-white transition-all text-xl font-light" placeholder="Ej. Nexus Admin">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">Descripción Corta</label>
+                    <textarea id="p-desc" required class="w-full bg-white/5 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-white transition-all text-lg font-light resize-none" placeholder="Define el propósito..." rows="2"></textarea>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">URL de Acceso</label>
+                    <input type="url" id="p-url" required class="w-full bg-white/5 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-white transition-all text-sm font-light text-blue-400" placeholder="https://...">
+                </div>
+
+                <button type="submit" class="w-full py-5 bg-white text-black font-bold uppercase tracking-[0.3em] text-[10px] rounded-xl hover:bg-neutral-200 transition-all active:scale-98 mt-4 shadow-xl">
+                    Registrar Proyecto
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="px-12 pb-12 pt-8 flex flex-col md:flex-row justify-between items-center text-[10px] uppercase tracking-[0.2em] text-white/20 font-semibold gap-4 mt-auto">
+        <div class="flex gap-8">
+            <span>Dash.Central Standalone v1.0.5</span>
+            <span class="hidden md:inline">•</span>
+            <span>© 2026 Studio Design</span>
+        </div>
+        <div class="flex gap-8">
+            <a href="#" class="hover:text-white transition-colors">Local SDK</a>
+            <a href="#" class="hover:text-white transition-colors">Sistema</a>
+            <a href="#" class="hover:text-white transition-colors">Métricas</a>
+        </div>
+    </footer>
+
+    <!-- Firebase SDK via CDN -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            projectId: "gen-lang-client-0123960740",
+            appId: "1:159161090356:web:9f293342d02b732718e561",
+            apiKey: "AIzaSyCyAqlNcJUqif8G07eApBbJDvjH4YXLodk",
+            authDomain: "gen-lang-client-0123960740.firebaseapp.com",
+            storageBucket: "gen-lang-client-0123960740.firebasestorage.app",
+            messagingSenderId: "159161090356",
+            measurementId: ""
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app, "ai-studio-bf198e37-1b09-4edf-9c9f-d0cf587f23aa");
+
+        let allProjects = [];
+        let searchTerm = "";
+
+        // UI Selectors
+        const projectsGrid = document.getElementById('projects-grid');
+        const projectCountEl = document.getElementById('project-count');
+        const searchInput = document.getElementById('search-input');
+        const projectForm = document.getElementById('project-form');
+        const modalOverlay = document.getElementById('modal-overlay');
+
+        // Functions
+        window.toggleModal = (isOpen) => {
+            modalOverlay.classList.toggle('hidden', !isOpen);
+            if (isOpen) {
+                document.getElementById('p-name').focus();
+            }
+        };
+
+        window.deleteProject = async (id) => {
+            if (confirm("¿Estás seguro de eliminar este proyecto?")) {
+                try {
+                    await deleteDoc(doc(db, 'projects', id));
+                } catch (error) {
+                    console.error("Delete Error:", error);
+                }
+            }
+        };
+
+        const renderProjects = () => {
+            const filtered = allProjects.filter(p => 
+                p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                p.description.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            const colors = ['bg-orange-500', 'bg-blue-500', 'bg-purple-500', 'bg-emerald-500', 'bg-rose-500', 'bg-amber-500'];
+            
+            projectsGrid.innerHTML = filtered.map(p => {
+                const accentColor = colors[p.id.length % colors.length];
+                return `
+                    <div class="glass p-8 flex flex-col justify-between rounded-2xl group relative transition-all duration-300 hover:bg-white/[0.06] hover:border-white/15 hover:-translate-y-1">
+                        <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="deleteProject('${p.id}')" class="p-1.5 text-white/20 hover:text-rose-400 transition-colors">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <div>
+                            <div class="w-8 h-1 ${accentColor} mb-6 transition-all group-hover:w-12"></div>
+                            <h3 class="text-xl font-medium mb-2 text-white/90 group-hover:text-white">${p.name}</h3>
+                            <p class="text-sm text-white/50 leading-relaxed font-light line-clamp-3 mb-6">${p.description}</p>
+                        </div>
+                        <a href="${p.url}" target="_blank" class="mt-4 py-2.5 border border-white/10 rounded-lg text-[10px] uppercase tracking-[0.2em] font-semibold text-white/70 hover:bg-white hover:text-black transition-all text-center">
+                            Ir a la App
+                        </a>
+                    </div>
+                `;
+            }).join('');
+
+            // Add the "New Slot" button at the end
+            projectsGrid.innerHTML += `
+                <button onclick="toggleModal(true)" class="glass p-8 flex flex-col items-center justify-center rounded-2xl border-dashed border-white/10 bg-transparent opacity-40 hover:opacity-100 transition-all group min-h-[250px]">
+                    <div class="text-center">
+                        <div class="text-4xl font-light mb-4 text-white/50 group-hover:text-orange-500 transition-colors">+</div>
+                        <p class="text-[10px] uppercase tracking-[0.2em] font-semibold">Nueva Ranura</p>
+                    </div>
+                </button>
+            `;
+
+            projectCountEl.textContent = `${allProjects.length} Unidades`;
+            lucide.createIcons();
+        };
+
+        // Data Subscription (Public)
+        const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
+        onSnapshot(q, (snapshot) => {
+            allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderProjects();
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            renderProjects();
+        });
+
+        projectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('p-name').value;
+            const description = document.getElementById('p-desc').value;
+            const url = document.getElementById('p-url').value;
+
+            try {
+                await addDoc(collection(db, 'projects'), {
+                    name,
+                    description,
+                    url,
+                    ownerId: 'public',
+                    createdAt: serverTimestamp()
+                });
+                projectForm.reset();
+                toggleModal(false);
+            } catch (error) {
+                console.error("Add Error:", error);
+            }
+        });
+
+        // Initial Icon Load
+        lucide.createIcons();
+    </script>
+</body>
+</html>
