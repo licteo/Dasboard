@@ -7,8 +7,9 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#050505">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="DashCentral">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/ios-filled/512/FFFFFF/dashboard.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/bubbles/512/dashboard.png">
     <!-- Tailwind CSS v4 CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -103,7 +104,12 @@
             </div>
         </nav>
 
-        <main class="flex-1 px-12 py-16 flex flex-col max-w-[1400px] mx-auto w-full">
+    <main class="flex-1 px-12 py-16 flex flex-col max-w-[1400px] mx-auto w-full">
+        <!-- Safety Loading Message -->
+        <div id="safe-loading" class="text-center py-20 serif italic text-white/20 text-lg">
+            Iniciando panel de control...
+        </div>
+        <div id="main-content-area" class="hidden">
             <div class="mb-16 flex flex-col md:flex-row justify-between items-end gap-8">
                 <div>
                     <h2 class="text-5xl font-light tracking-tight mb-2">Mis Aplicaciones</h2>
@@ -113,7 +119,7 @@
                 <div class="relative group w-full md:w-80">
                     <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-orange-500 transition-colors w-4 h-4"></i>
                     <input id="search-input" type="text" placeholder="FILTRAR PROYECTOS..."
-                        class="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-[10px] uppercase tracking-widest font-semibold focus:outline-none focus:border-white/20 transition-all">
+                        class="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-[10px] uppercase tracking-widest font-semibold focus:outline-none focus:border-white transition-all">
                 </div>
             </div>
 
@@ -126,7 +132,8 @@
             <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 hidden">
                 <!-- Cards will be injected here -->
             </div>
-        </main>
+        </div>
+    </main>
     </div>
 
     <!-- Floating Action Button -->
@@ -159,8 +166,15 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">URL de Acceso</label>
-                    <input type="url" id="p-url" required class="w-full bg-white/5 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-white transition-all text-sm font-light text-blue-400" placeholder="https://...">
+                    <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">URL o Protocolo de App</label>
+                    <input type="text" id="p-url" required class="w-full bg-white/5 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-white transition-all text-sm font-light text-blue-400" placeholder="https://... o spotify:">
+                    <div class="pt-2 flex flex-wrap gap-2">
+                        <span class="text-[8px] text-white/20 uppercase">Ejemplos:</span>
+                        <button type="button" onclick="setExample('vscode://')" class="text-[8px] px-2 py-1 bg-white/5 rounded hover:bg-white/10 text-white/40">VS Code</button>
+                        <button type="button" onclick="setExample('slack://')" class="text-[8px] px-2 py-1 bg-white/5 rounded hover:bg-white/10 text-white/40">Slack</button>
+                        <button type="button" onclick="setExample('spotify:')" class="text-[8px] px-2 py-1 bg-white/5 rounded hover:bg-white/10 text-white/40">Spotify</button>
+                        <button type="button" onclick="setExample('whatsapp://')" class="text-[8px] px-2 py-1 bg-white/5 rounded hover:bg-white/10 text-white/40">WhatsApp</button>
+                    </div>
                 </div>
 
                 <button type="submit" class="w-full py-5 bg-white text-black font-bold uppercase tracking-[0.3em] text-[10px] rounded-xl hover:bg-neutral-200 transition-all active:scale-98 mt-4 shadow-xl">
@@ -173,7 +187,7 @@
     <!-- Footer -->
     <footer class="px-12 pb-12 pt-8 flex flex-col md:flex-row justify-between items-center text-[10px] uppercase tracking-[0.2em] text-white/20 font-semibold gap-4 mt-auto">
         <div class="flex gap-8">
-            <span>Dash.Central Public v1.0.6</span>
+            <span>Dash.Central Public v1.1.0</span>
             <span class="hidden md:inline">•</span>
             <span>© 2026 Studio Design</span>
         </div>
@@ -242,6 +256,11 @@
         const modalOverlay = document.getElementById('modal-overlay');
 
         // Functions
+        window.setExample = (protocol) => {
+            document.getElementById('p-url').value = protocol;
+            document.getElementById('p-url').focus();
+        };
+
         window.toggleModal = (isOpen) => {
             modalOverlay.classList.toggle('hidden', !isOpen);
             if (isOpen) {
@@ -268,6 +287,8 @@
 
             const colors = ['bg-orange-500', 'bg-blue-500', 'bg-purple-500', 'bg-emerald-500', 'bg-rose-500', 'bg-amber-500'];
             
+            document.getElementById('safe-loading').classList.add('hidden');
+            document.getElementById('main-content-area').classList.remove('hidden');
             projectsGrid.innerHTML = filtered.map(p => {
                 const accentColor = colors[p.id.length % colors.length];
                 return `
