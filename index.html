@@ -1,373 +1,4676 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Central</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#050505">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="DashCentral">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/bubbles/512/dashboard.png">
-    <!-- Tailwind CSS v4 CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <style>
-        @layer base {
-            body {
-                font-family: 'Inter', sans-serif;
-                margin: 0;
-                padding: 0;
-                background-color: #050505;
-                color: #EAEAEA;
-            }
-            .serif {
-                font-family: 'Playfair Display', serif;
-            }
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#6366f1" />
+  <meta name="description" content="Progressive Web App monolítica de tareas en un único archivo index.html lista para GitHub, con subtareas jerárquicas anidadas (sub-subtareas), autoguardado en tiempo real de notas y borradores, alarmas programadas, diseño responsive y persistencia dual offline." />
+  <title>TaskFlow • Lista de Tareas PWA</title>
 
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
+  <!-- PWA Manifest Embebido mediante Data URL -->
+  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22TaskFlow%20PWA%20-%20Lista%20de%20Tareas%22%2C%22short_name%22%3A%22TaskFlow%22%2C%22description%22%3A%22Gesti%C3%B3n%20inteligente%20de%20tareas%20con%20soporte%20offline%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%236366f1%22%2C%22orientation%22%3A%22portrait-primary%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20512%20512'%20width%3D'512'%20height%3D'512'%253E%253Crect%20width%3D'512'%20height%3D'512'%20rx%3D'128'%20fill='%25236366f1'%2F%253E%253Cpath%20d%3D'M140%20256%20L220%20336%20L372%20176'%20fill%3D'none'%20stroke='white'%20stroke-width='48'%20stroke-linecap='round'%20stroke-linejoin='round'%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D" />
 
-        .card-hover {
-            transition: all 0.3s ease;
-        }
+  <!-- Favicon SVG Embebido -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%236366f1'/%3E%3Cpath d='M28 50 L42 64 L72 34' fill='none' stroke='white' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 
-        .card-hover:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.15);
-            transform: translateY(-4px);
-        }
+  <!-- Google Fonts Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-        /* Selection Color */
-        ::selection {
-            background: rgba(249, 115, 22, 0.3);
-        }
+  <style>
+    /* ==========================================================================
+       VARIABLES Y TEMAS (CSS CUSTOM PROPERTIES)
+       ========================================================================== */
+    :root {
+      --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-spring: 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #050505;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1a1a1a;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #222;
-        }
+      /* Categorías Colores Base */
+      --cat-trabajo: #3b82f6;
+      --cat-personal: #8b5cf6;
+      --cat-estudio: #10b981;
+      --cat-hogar: #f59e0b;
+      --cat-urgente: #ef4444;
+      --cat-otro: #06b6d4;
 
-        .line-clamp-3 {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;  
-            overflow: hidden;
-        }
-    </style>
+      /* Prioridades */
+      --prio-alta: #ef4444;
+      --prio-media: #f59e0b;
+      --prio-baja: #10b981;
+    }
+
+    /* Tema Oscuro (Predeterminado) */
+    [data-theme="dark"] {
+      --bg-body: #0b0f19;
+      --bg-surface: #111827;
+      --bg-card: rgba(17, 24, 39, 0.75);
+      --bg-card-hover: rgba(31, 41, 55, 0.85);
+      --bg-subtle: #1e293b;
+      --bg-input: #1f2937;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: #6366f1;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --accent: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      --accent-hover: #4f46e5;
+      --accent-light: rgba(99, 102, 241, 0.15);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+      --tag-bg: rgba(255, 255, 255, 0.06);
+    }
+
+    /* Tema Claro */
+    [data-theme="light"] {
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --bg-card-hover: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --bg-input: #f8fafc;
+      --border-color: rgba(0, 0, 0, 0.07);
+      --border-focus: #6366f1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+      --accent: #4f46e5;
+      --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      --accent-hover: #4338ca;
+      --accent-light: rgba(79, 70, 229, 0.08);
+      --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+      --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+      --tag-bg: rgba(0, 0, 0, 0.04);
+    }
+
+    /* ==========================================================================
+       RESET Y ESTILOS GLOBALES
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 1rem 3rem 1rem;
+      transition: background-color var(--transition-base), color var(--transition-base);
+      line-height: 1.5;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    /* Contenedor Principal */
+    .app-container {
+      width: 100%;
+      max-width: 780px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ==========================================================================
+       HEADER & BARRA DE ACCIONES
+       ========================================================================== */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pwa-pill {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 6px;
+      background: var(--accent-light);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .icon-btn {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      color: var(--text-main);
+      border-color: var(--accent);
+      background: var(--bg-card-hover);
+      transform: translateY(-1px);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* ==========================================================================
+       DASHBOARD STATS & PROGRESO
+       ========================================================================== */
+    .dashboard-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      box-shadow: var(--card-shadow);
+      transition: transform var(--transition-fast);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.1;
+    }
+
+    .stat-value.pending {
+      color: var(--prio-media);
+    }
+
+    .stat-value.completed {
+      color: var(--prio-baja);
+    }
+
+    .progress-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 0.85rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-subtle);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent-gradient);
+      border-radius: 999px;
+      width: 0%;
+      transition: width var(--transition-spring);
+    }
+
+    /* ==========================================================================
+       FORMULARIO CREACIÓN DE TAREAS
+       ========================================================================== */
+    .task-creator-box {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 1.25rem;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .input-main-row {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .text-input {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+
+    .text-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    .text-input::placeholder {
+      color: var(--text-subtle);
+    }
+
+    .btn-submit {
+      background: var(--accent-gradient);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.75rem 1.25rem;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn-submit:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.97);
+    }
+
+    .creator-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .select-custom {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.45rem 0.75rem;
+      font-family: inherit;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      outline: none;
+      cursor: pointer;
+      transition: border-color var(--transition-fast);
+    }
+
+    .select-custom:focus {
+      border-color: var(--border-focus);
+    }
+
+    .select-custom option {
+      background: var(--bg-surface);
+      color: var(--text-main);
+    }
+
+    .date-input {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.4rem 0.6rem;
+      font-family: inherit;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .date-input::-webkit-calendar-picker-indicator {
+      filter: invert(0.6);
+      cursor: pointer;
+    }
+
+    /* Recordatorios y Presets */
+    .reminder-control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      width: 100%;
+    }
+
+    .reminder-input-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .reminder-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .preset-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+    }
+
+    .preset-chip {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.25rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .preset-chip:hover {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    /* Barra / Estado de Notificaciones */
+    .notification-status-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 0.65rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-size: 0.82rem;
+      box-shadow: var(--card-shadow);
+      transition: all var(--transition-base);
+    }
+
+    .notification-status-bar.needs-permission {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+      border-color: rgba(99, 102, 241, 0.35);
+    }
+
+    .notif-info-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .notif-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .notif-dot.granted {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .notif-dot.default {
+      background: #f59e0b;
+      box-shadow: 0 0 8px #f59e0b;
+    }
+
+    .notif-dot.denied {
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+    }
+
+    .notif-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-notif-action {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+
+    .btn-notif-action:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-test-alarm {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-radius: 8px;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      white-space: nowrap;
+    }
+
+    .btn-test-alarm:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    /* Etiqueta de Recordatorio en Lista de Tareas */
+    .tag-reminder {
+      background: rgba(99, 102, 241, 0.14);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 0.02em;
+    }
+
+    .tag-reminder.ringing {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border-color: #ef4444;
+      animation: pulseAlarm 1.2s infinite;
+    }
+
+    .tag-reminder.due-soon {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .tag-reminder.past {
+      background: var(--tag-bg);
+      color: var(--text-subtle);
+      border-color: var(--border-color);
+      opacity: 0.75;
+    }
+
+    @keyframes pulseAlarm {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      70% { transform: scale(1.03); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    /* Modal de Alarma Activa */
+    .alarm-modal-card {
+      border: 2px solid #6366f1;
+      box-shadow: 0 0 35px rgba(99, 102, 241, 0.35);
+      animation: alarmBounce 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes alarmBounce {
+      from { transform: scale(0.8) translateY(20px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .alarm-hero-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: var(--accent-gradient);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+      animation: bellShake 0.8s infinite;
+    }
+
+    @keyframes bellShake {
+      0%, 100% { transform: rotate(0); }
+      20%, 60% { transform: rotate(12deg); }
+      40%, 80% { transform: rotate(-12deg); }
+    }
+
+    .snooze-buttons-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+
+    /* ==========================================================================
+       FILTROS, BÚSQUEDA Y CATEGORÍAS
+       ========================================================================== */
+    .controls-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .search-sort-row {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .search-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.85rem;
+      color: var(--text-subtle);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.65rem 0.85rem 0.65rem 2.4rem;
+      font-family: inherit;
+      font-size: 0.88rem;
+      color: var(--text-main);
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+
+    .search-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    .filter-pills-row {
+      display: flex;
+      gap: 0.4rem;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .filter-pills-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.4rem 0.85rem;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .filter-pill:hover {
+      color: var(--text-main);
+      background: var(--bg-card-hover);
+    }
+
+    .filter-pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+
+    .badge-count {
+      font-size: 0.72rem;
+      padding: 0.05rem 0.35rem;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .filter-pill.active .badge-count {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .category-chips {
+      display: flex;
+      gap: 0.35rem;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .category-chips::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat-chip {
+      padding: 0.3rem 0.65rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--tag-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+
+    .cat-chip:hover {
+      color: var(--text-main);
+      border-color: var(--text-muted);
+    }
+
+    .cat-chip.active {
+      border-color: var(--chip-color, var(--accent));
+      background: var(--chip-bg, var(--accent-light));
+      color: var(--text-main);
+    }
+
+    .cat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--chip-color, var(--accent));
+    }
+
+    /* ==========================================================================
+       LISTA DE TAREAS
+       ========================================================================== */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      min-height: 120px;
+    }
+
+    .task-item {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      box-shadow: var(--card-shadow);
+      transition: all var(--transition-base);
+      animation: taskFadeIn 250ms ease forwards;
+      position: relative;
+    }
+
+    @keyframes taskFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .task-item:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: var(--bg-card-hover);
+      transform: translateX(2px);
+    }
+
+    .task-item.completed {
+      opacity: 0.6;
+      background: var(--bg-subtle);
+    }
+
+    .task-item.completed .task-title {
+      text-decoration: line-through;
+      color: var(--text-subtle);
+    }
+
+    /* Checkbox Personalizado */
+    .custom-checkbox {
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      border: 2px solid var(--text-subtle);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-spring);
+      background: transparent;
+    }
+
+    .task-item:hover .custom-checkbox {
+      border-color: var(--accent);
+    }
+
+    .task-item.completed .custom-checkbox {
+      background: var(--accent-gradient);
+      border-color: transparent;
+      transform: scale(1.05);
+    }
+
+    .custom-checkbox svg {
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all var(--transition-spring);
+      color: white;
+    }
+
+    .task-item.completed .custom-checkbox svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Contenido de la Tarea */
+    .task-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      min-width: 0;
+    }
+
+    .task-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+      word-break: break-word;
+      transition: color var(--transition-fast);
+    }
+
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+    }
+
+    .meta-tag {
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .tag-category {
+      background: var(--tag-bg);
+      color: var(--cat-color, var(--accent));
+      border: 1px solid currentColor;
+      opacity: 0.9;
+    }
+
+    .tag-priority {
+      background: var(--prio-bg);
+      color: var(--prio-color);
+    }
+
+    .tag-due {
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .tag-due.overdue {
+      color: var(--prio-alta);
+      font-weight: 700;
+    }
+
+    /* Acciones de la Tarea */
+    .task-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      opacity: 0.85;
+      transition: opacity var(--transition-fast);
+    }
+
+    .task-item:hover .task-actions {
+      opacity: 1;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .action-btn:hover {
+      background: var(--bg-subtle);
+      color: var(--text-main);
+    }
+
+    .action-btn.btn-delete:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    .action-btn.btn-toggle-collapse {
+      color: var(--text-muted);
+      position: relative;
+    }
+
+    .action-btn.btn-toggle-collapse:hover {
+      color: var(--accent);
+      background: rgba(99, 102, 241, 0.15);
+    }
+
+    .action-btn.btn-toggle-collapse.is-collapsed {
+      color: var(--accent);
+      background: rgba(99, 102, 241, 0.12);
+    }
+
+    .action-btn.btn-toggle-collapse svg {
+      transition: transform var(--transition-fast);
+    }
+
+    .action-btn.btn-toggle-collapse.is-collapsed svg {
+      transform: rotate(-90deg);
+    }
+
+    /* Estado Colapsado / Minimizado de Tarea */
+    .task-item.is-collapsed {
+      border-color: rgba(99, 102, 241, 0.25);
+    }
+
+    .task-item.is-collapsed .task-desc-box,
+    .task-item.is-collapsed .task-subtasks-container {
+      display: none !important;
+    }
+
+    .task-item.is-collapsed .meta-tag-subtask-summary {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all var(--transition-fast);
+    }
+
+    .task-item.is-collapsed .meta-tag-subtask-summary:hover {
+      background: rgba(99, 102, 241, 0.22) !important;
+      border-color: var(--accent) !important;
+    }
+
+    /* ==========================================================================
+       ESTADO VACÍO (EMPTY STATE)
+       ========================================================================== */
+    .empty-state {
+      background: var(--bg-card);
+      border: 1px dashed var(--border-color);
+      border-radius: 18px;
+      padding: 3rem 1.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .empty-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--bg-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+
+    .empty-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .empty-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      max-width: 300px;
+    }
+
+    /* ==========================================================================
+       MODAL / DIALOGS (EDICIÓN Y BACKUP)
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-base);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--glass-shadow);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      transform: scale(0.95) translateY(10px);
+      transition: transform var(--transition-spring);
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .form-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-secondary {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.6rem 1.1rem;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+    }
+
+    /* Modal Backup Específico */
+    .backup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .backup-option-card {
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      border-radius: 14px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .backup-option-card:hover {
+      border-color: var(--accent);
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+    }
+
+    .backup-option-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .backup-option-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       TOAST NOTIFICATIONS
+       ========================================================================== */
+    .toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 2000;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.75rem 1.1rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      animation: toastSlideIn 250ms ease forwards;
+      pointer-events: auto;
+    }
+
+    @keyframes toastSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .toast.success {
+      border-left: 4px solid var(--prio-baja);
+    }
+
+    .toast.info {
+      border-left: 4px solid var(--accent);
+    }
+
+    .toast.error {
+      border-left: 4px solid var(--prio-alta);
+    }
+
+    /* ==========================================================================
+       SUBTAREAS (SUBTASKS) STYLES
+       ========================================================================== */
+    .subtasks-section {
+      width: 100%;
+      margin-top: 0.65rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .subtasks-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    .subtasks-progress-bar {
+      flex: 1;
+      max-width: 120px;
+      height: 5px;
+      background: var(--bg-subtle);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-left: auto;
+    }
+
+    .subtasks-progress-fill {
+      height: 100%;
+      background: var(--prio-baja);
+      border-radius: 999px;
+      transition: width var(--transition-spring);
+    }
+
+    .task-subtasks-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-top: 0.25rem;
+      box-sizing: border-box;
+    }
+
+    .subtasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .subtask-node {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-bottom: 0.15rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .subtask-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.6rem;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      transition: all var(--transition-fast);
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .subtask-row:hover {
+      border-color: rgba(99, 102, 241, 0.35);
+      background: var(--bg-card-hover);
+    }
+
+    .subtask-row.completed {
+      opacity: 0.65;
+    }
+
+    .subtask-row.completed .subtask-title {
+      text-decoration: line-through;
+      color: var(--text-subtle);
+    }
+
+    .subtask-checkbox {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      flex-shrink: 0;
+      border: 1.5px solid var(--text-subtle);
+      border-radius: 5px;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      color: white;
+      padding: 0;
+    }
+
+    .subtask-row:hover .subtask-checkbox,
+    .sub-subtask-item:hover .subtask-checkbox {
+      border-color: var(--accent);
+    }
+
+    .subtask-row.completed .subtask-checkbox,
+    .sub-subtask-item.completed .subtask-checkbox {
+      background: var(--prio-baja);
+      border-color: var(--prio-baja);
+    }
+
+    .subtask-title {
+      font-size: 0.84rem;
+      color: var(--text-main);
+      flex: 1 1 auto;
+      min-width: 0;
+      word-break: normal;
+      overflow-wrap: break-word;
+      line-height: 1.35;
+    }
+
+    .subtask-actions-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .subtask-child-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.12rem 0.4rem;
+      border-radius: 5px;
+      background: rgba(99, 102, 241, 0.12);
+      color: var(--accent);
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      flex-shrink: 0;
+    }
+
+    .subtask-action-btn-nested {
+      background: transparent;
+      border: 1px dashed var(--border-color);
+      color: var(--text-muted);
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.15rem 0.45rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .subtask-action-btn-nested:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .subtask-delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-subtle);
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+    }
+
+    .subtask-delete-btn:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    /* Subtareas Anidadas / Sub-subtareas */
+    .sub-nested-container {
+      margin-left: 1.15rem;
+      padding-left: 0.65rem;
+      border-left: 2px dashed rgba(99, 102, 241, 0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      margin-top: 0.15rem;
+      margin-bottom: 0.2rem;
+      width: calc(100% - 1.15rem);
+      box-sizing: border-box;
+    }
+
+    .sub-subtasks-tree {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .sub-subtask-item {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.3rem 0.55rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      transition: all var(--transition-fast);
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .sub-subtask-item:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+      background: var(--bg-card-hover);
+    }
+
+    .sub-subtask-item.completed {
+      opacity: 0.65;
+    }
+
+    .sub-subtask-item.completed .subtask-title {
+      text-decoration: line-through;
+      color: var(--text-subtle);
+    }
+
+    .child-add-row {
+      display: flex;
+      gap: 0.35rem;
+      align-items: center;
+      margin-top: 0.1rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .child-add-input {
+      flex: 1 1 auto;
+      min-width: 0;
+      background: var(--bg-input);
+      border: 1px dashed var(--border-color);
+      border-radius: 6px;
+      padding: 0.3rem 0.55rem;
+      font-family: inherit;
+      font-size: 0.76rem;
+      color: var(--text-main);
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+
+    .child-add-input:focus {
+      border-style: solid;
+      border-color: var(--border-focus);
+      background: var(--bg-surface);
+      box-shadow: 0 0 0 2px var(--accent-light);
+    }
+
+    .child-add-btn {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .child-add-btn:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .subtask-add-row {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+      margin-top: 0.25rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .subtask-add-input {
+      flex: 1 1 auto;
+      min-width: 0;
+      background: var(--bg-input);
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 0.45rem 0.65rem;
+      font-family: inherit;
+      font-size: 0.8rem;
+      color: var(--text-main);
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+
+    .subtask-add-input:focus {
+      border-style: solid;
+      border-color: var(--border-focus);
+      background: var(--bg-surface);
+      box-shadow: 0 0 0 2px var(--accent-light);
+    }
+
+    .subtask-add-btn {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      flex-shrink: 0;
+    }
+
+    .subtask-add-btn:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    /* ==========================================================================
+       NOTAS ESCRITAS Y AUTOGUARDADO ("SE GUARDE LO ESCRITO")
+       ========================================================================== */
+    .task-desc-box {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-left: 3px solid var(--accent);
+      padding: 0.45rem 0.7rem;
+      border-radius: 8px;
+      margin-top: 0.2rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .textarea-notes {
+      width: 100%;
+      min-height: 54px;
+      resize: vertical;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.65rem 0.85rem;
+      font-family: inherit;
+      font-size: 0.88rem;
+      color: var(--text-main);
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+
+    .textarea-notes:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    .textarea-notes::placeholder {
+      color: var(--text-subtle);
+    }
+
+    .autosave-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      padding: 0 0.15rem;
+    }
+
+    .autosave-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-weight: 600;
+      color: var(--text-subtle);
+      transition: color var(--transition-fast);
+    }
+
+    .autosave-pill.saving {
+      color: var(--prio-media);
+    }
+
+    .autosave-pill.saved {
+      color: var(--prio-baja);
+    }
+
+    .autosave-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .draft-restored-banner {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-radius: 12px;
+      padding: 0.55rem 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--text-main);
+      animation: taskFadeIn 200ms ease forwards;
+    }
+
+    .draft-restored-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .draft-restored-btn:hover {
+      color: #ef4444;
+      border-color: #ef4444;
+    }
+
+    .creator-subtasks-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .draft-subtasks-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .draft-subtask-chip {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.74rem;
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .draft-subtask-chip button {
+      background: none;
+      border: none;
+      color: var(--text-subtle);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      padding: 0;
+      transition: color var(--transition-fast);
+    }
+
+    .draft-subtask-chip button:hover {
+      color: #ef4444;
+    }
+
+    /* ==========================================================================
+       RESPONSIVE & MOBILE DESIGN (TODOS LOS DISPOSITIVOS)
+       ========================================================================== */
+    @media (max-width: 768px) {
+      .app-container {
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 0.65rem 0.65rem 3rem 0.65rem;
+      }
+      .app-header {
+        padding: 0.65rem 0.85rem;
+        border-radius: 14px;
+      }
+      .brand-title {
+        font-size: 1.1rem;
+      }
+      .brand-logo {
+        width: 36px;
+        height: 36px;
+      }
+      .notification-status-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+      }
+      .notif-info-wrap {
+        font-size: 0.78rem;
+      }
+      .notif-actions {
+        width: 100%;
+        display: flex;
+        gap: 0.4rem;
+      }
+      .btn-notif-action, .btn-test-alarm {
+        flex: 1;
+        justify-content: center;
+        padding: 0.55rem;
+        font-size: 0.78rem;
+        min-height: 44px;
+      }
+      .dashboard-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.35rem;
+      }
+      .stat-card {
+        padding: 0.5rem 0.4rem;
+        text-align: center;
+        align-items: center;
+      }
+      .stat-label {
+        font-size: 0.68rem;
+      }
+      .stat-value {
+        font-size: 1.25rem;
+      }
+      .task-creator-box {
+        padding: 0.9rem;
+        border-radius: 14px;
+        gap: 0.75rem;
+      }
+      .input-main-row {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .text-input {
+        padding: 0.75rem 0.85rem;
+        font-size: 0.95rem;
+      }
+      .btn-submit {
+        justify-content: center;
+        width: 100%;
+        padding: 0.8rem;
+        min-height: 44px;
+      }
+      .creator-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.45rem;
+      }
+      .creator-options input[type="date"] {
+        grid-column: span 2;
+      }
+      .select-custom, .date-input {
+        width: 100%;
+        min-height: 40px;
+        font-size: 0.82rem;
+      }
+      .reminder-input-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .preset-chips-row {
+        gap: 0.35rem;
+      }
+      .preset-chip {
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.65rem;
+      }
+      .search-sort-row {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .search-input {
+        min-height: 42px;
+      }
+      .task-item {
+        padding: 0.75rem 0.85rem;
+        gap: 0.65rem;
+        align-items: flex-start;
+      }
+      .custom-checkbox {
+        margin-top: 2px;
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+      }
+      .task-content {
+        gap: 0.35rem;
+      }
+      .task-actions {
+        margin-top: 2px;
+      }
+      .action-btn {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+      }
+      /* Optimizaciones táctiles y de ancho para Subtareas en móviles */
+      .subtask-row {
+        padding: 0.45rem 0.6rem;
+        gap: 0.5rem;
+        align-items: flex-start;
+      }
+      .subtask-checkbox {
+        margin-top: 2px;
+      }
+      .subtask-title {
+        font-size: 0.84rem;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-wrap: break-word;
+        word-break: normal;
+        white-space: normal;
+        line-height: 1.35;
+      }
+      .subtask-actions-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      .subtask-action-btn-nested {
+        padding: 0.2rem 0.45rem;
+        font-size: 0.68rem;
+      }
+      .subtask-action-btn-nested span {
+        display: none;
+      }
+      .sub-nested-container {
+        margin-left: 0.4rem;
+        padding-left: 0.4rem;
+        width: calc(100% - 0.4rem);
+      }
+      .sub-subtask-item {
+        padding: 0.35rem 0.5rem;
+        gap: 0.4rem;
+        align-items: flex-start;
+      }
+      .sub-subtask-item .subtask-checkbox {
+        margin-top: 2px;
+      }
+      .child-add-row {
+        gap: 0.25rem;
+      }
+      .child-add-input {
+        font-size: 0.74rem;
+        padding: 0.3rem 0.45rem;
+      }
+      .child-add-btn {
+        padding: 0.3rem 0.45rem;
+        font-size: 0.7rem;
+      }
+      .subtask-add-row {
+        gap: 0.3rem;
+      }
+      .subtask-add-input {
+        font-size: 0.78rem;
+        padding: 0.38rem 0.55rem;
+      }
+      .subtask-add-btn {
+        padding: 0.38rem 0.65rem;
+        font-size: 0.74rem;
+      }
+      .backup-grid {
+        grid-template-columns: 1fr;
+      }
+      .toast-container {
+        left: 0.75rem;
+        right: 0.75rem;
+        bottom: 0.75rem;
+      }
+      .modal-card {
+        padding: 1.15rem;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .modal-footer {
+        flex-direction: column-reverse;
+      }
+      .modal-footer button {
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .brand-title {
+        font-size: 1rem;
+      }
+      .pwa-pill {
+        display: none;
+      }
+      .creator-options {
+        grid-template-columns: 1fr;
+      }
+      .creator-options input[type="date"] {
+        grid-column: span 1;
+      }
+      .stat-value {
+        font-size: 1.15rem;
+      }
+    }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col">
 
-    <!-- Main Content -->
-    <div id="app-root" class="flex-1 flex flex-col">
-        <!-- Navigation -->
-        <nav class="h-24 w-full px-12 flex items-center justify-between border-b border-white/5 bg-[#050505] sticky top-0 z-40 backdrop-blur-md">
-            <div>
-                <h1 class="serif text-2xl font-semibold tracking-tight italic">
-                    Dashboard<span class="text-orange-500">.</span>Central
-                </h1>
-            </div>
-            
-            <div class="flex items-center gap-10">
-                <button id="install-btn" class="hidden flex items-center gap-2 px-4 py-2 bg-orange-500 text-black rounded-lg text-[10px] uppercase font-bold tracking-widest hover:bg-orange-400 transition-all">
-                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    <span>Instalar App</span>
-                </button>
-                <div class="hidden md:flex items-center gap-8">
-                    <div class="flex flex-col items-end">
-                        <span class="text-[10px] uppercase tracking-[0.2em] opacity-40 font-semibold">Proyectos Activos</span>
-                        <span id="project-count" class="text-lg font-light tracking-wide">0 Unidades</span>
-                    </div>
-                    <div class="w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center relative">
-                        <div id="user-placeholder" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    </div>
-                </div>
-            </div>
-        </nav>
+<body>
+  <div class="app-container">
 
-    <main class="flex-1 px-12 py-16 flex flex-col max-w-[1400px] mx-auto w-full">
-        <!-- Safety Loading Message -->
-        <div id="safe-loading" class="text-center py-20 serif italic text-white/20 text-lg">
-            Iniciando panel de control...
+    <!-- HEADER DE LA PWA -->
+    <header class="app-header" id="app-header">
+      <div class="brand-group">
+        <div class="brand-logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
         </div>
-        <div id="main-content-area" class="hidden">
-            <div class="mb-16 flex flex-col md:flex-row justify-between items-end gap-8">
-                <div>
-                    <h2 class="text-5xl font-light tracking-tight mb-2">Mis Aplicaciones</h2>
-                    <span class="text-sm text-white/40 italic serif block">Sincronizado con Firestore Enterprise DB (Public)</span>
-                </div>
-                
-                <div class="relative group w-full md:w-80">
-                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-orange-500 transition-colors w-4 h-4"></i>
-                    <input id="search-input" type="text" placeholder="FILTRAR PROYECTOS..."
-                        class="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-[10px] uppercase tracking-widest font-semibold focus:outline-none focus:border-white transition-all">
-                </div>
-            </div>
-
-            <!-- Loading State -->
-            <div id="loading-overlay" class="flex flex-col items-center justify-center py-20">
-                <div class="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-
-            <!-- Projects Grid -->
-            <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 hidden">
-                <!-- Cards will be injected here -->
-            </div>
+        <div>
+          <h1 class="brand-title">
+            TaskFlow
+            <span class="pwa-pill" id="pwa-status-badge">PWA • Offline</span>
+          </h1>
         </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Botón Backup / Sincronización -->
+        <button class="icon-btn" id="btn-open-backup" title="Exportar / Importar Respaldo JSON" aria-label="Exportar o Importar Tareas">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+
+        <!-- Selector de Tema (Oscuro / Claro) -->
+        <button class="icon-btn" id="btn-theme-toggle" title="Cambiar Tema (Oscuro/Claro)" aria-label="Cambiar Tema">
+          <svg id="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg id="theme-icon-sun" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- BARRA / ESTADO DE PERMISO DE NOTIFICACIONES -->
+    <div class="notification-status-bar" id="notification-status-bar">
+      <div class="notif-info-wrap">
+        <span class="notif-dot default" id="notif-status-dot" title="Estado de permisos de notificación"></span>
+        <span id="notif-status-text">Recordatorios: Notificaciones pendientes de activación</span>
+      </div>
+      <div class="notif-actions">
+        <button class="btn-test-alarm" id="btn-quick-test-alarm" onclick="window.TaskFlowApp.triggerQuickTest(5)" title="Crear una tarea de prueba que sonará en 5 segundos">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span>Probar alarma (5s)</span>
+        </button>
+        <button class="btn-notif-action" id="btn-request-notif" onclick="window.TaskFlowApp.requestNotificationPermission()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span id="btn-request-notif-text">Activar Notificaciones</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- RESUMEN / DASHBOARD DE MÉTRICAS -->
+    <section class="dashboard-stats" aria-label="Métricas de tareas">
+      <div class="stat-card" id="stat-card-total">
+        <span class="stat-label">Total</span>
+        <span class="stat-value" id="stat-total-count">0</span>
+      </div>
+      <div class="stat-card" id="stat-card-pending">
+        <span class="stat-label">Pendientes</span>
+        <span class="stat-value pending" id="stat-pending-count">0</span>
+      </div>
+      <div class="stat-card" id="stat-card-completed">
+        <span class="stat-label">Completadas</span>
+        <span class="stat-value completed" id="stat-completed-count">0</span>
+      </div>
+    </section>
+
+    <!-- BARRA DE PROGRESO -->
+    <div class="progress-container" id="progress-container">
+      <div class="progress-header">
+        <span>Progreso general</span>
+        <span id="progress-percentage-text">0%</span>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <!-- FORMULARIO CREACIÓN DE TAREAS -->
+    <section class="task-creator-box" id="task-creator-box">
+      <!-- Indicador de Autoguardado en Vivo -->
+      <div class="autosave-status-row">
+        <span style="font-weight: 700; color: var(--text-main); font-size: 0.85rem; display: flex; align-items: center; gap: 0.35rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nueva Tarea
+        </span>
+        <span class="autosave-pill saved" id="autosave-pill" title="Lo que escribes se guarda automáticamente en tiempo real">
+          <span class="autosave-dot"></span>
+          <span id="autosave-text">Autoguardado activo</span>
+        </span>
+      </div>
+
+      <!-- Banner de Borrador Restaurado (si existe borrador sin enviar) -->
+      <div class="draft-restored-banner" id="draft-restored-banner" style="display: none;">
+        <span>✍️ <strong>Borrador recuperado:</strong> Se restauraron tus textos y apuntes sin guardar.</span>
+        <button type="button" class="draft-restored-btn" onclick="window.TaskFlowApp.clearFormDraft(true)" title="Descartar este borrador">Descartar</button>
+      </div>
+
+      <form id="task-form" onsubmit="event.preventDefault(); window.TaskFlowApp.handleAddTask();">
+        <div class="input-main-row">
+          <input 
+            type="text" 
+            id="input-task-title" 
+            class="text-input" 
+            placeholder="¿Qué necesitas hacer hoy?..." 
+            autocomplete="off"
+            required 
+          />
+          <button type="submit" class="btn-submit" id="btn-add-task">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Agregar</span>
+          </button>
+        </div>
+
+        <!-- Notas / Descripción Adicional ("Que se guarde lo escrito") -->
+        <div style="margin-top: 0.2rem;">
+          <textarea 
+            id="input-task-description" 
+            class="textarea-notes" 
+            rows="2" 
+            placeholder="Notas, apuntes o detalles adicionales (se guardan automáticamente)..." 
+            title="Notas o apuntes para la tarea (se guardan automáticamente)"
+          ></textarea>
+        </div>
+
+        <!-- Añadir Subtareas durante la Creación -->
+        <div class="creator-subtasks-wrapper">
+          <div style="display: flex; gap: 0.4rem; align-items: center;">
+            <input 
+              type="text" 
+              id="input-draft-subtask" 
+              class="text-input" 
+              style="padding: 0.45rem 0.75rem; font-size: 0.82rem;" 
+              placeholder="+ Añadir subtarea preliminar (Enter para agregar)..." 
+              onkeydown="if(event.key==='Enter'){event.preventDefault(); window.TaskFlowApp.addDraftSubtask();}"
+            />
+            <button 
+              type="button" 
+              class="btn-secondary" 
+              style="padding: 0.45rem 0.85rem; font-size: 0.8rem; white-space: nowrap; font-weight: 700;"
+              onclick="window.TaskFlowApp.addDraftSubtask()"
+            >
+              + Subtarea
+            </button>
+          </div>
+          <!-- Chips de subtareas pendientes de agregar -->
+          <div class="draft-subtasks-preview" id="draft-subtasks-container"></div>
+        </div>
+
+        <div class="creator-options">
+          <!-- Categoría -->
+          <select id="select-task-category" class="select-custom" title="Seleccionar Categoría">
+            <option value="Trabajo">💼 Trabajo</option>
+            <option value="Personal">🌟 Personal</option>
+            <option value="Estudio">📚 Estudio</option>
+            <option value="Hogar">🏠 Hogar</option>
+            <option value="Urgente">🔥 Urgente</option>
+            <option value="Parqueadero">🚗 Parqueadero</option>
+          </select>
+
+          <!-- Prioridad -->
+          <select id="select-task-priority" class="select-custom" title="Nivel de Prioridad">
+            <option value="media">⚡ Prioridad Media</option>
+            <option value="alta">🔴 Prioridad Alta</option>
+            <option value="baja">🟢 Prioridad Baja</option>
+          </select>
+
+          <!-- Fecha Límite Opcional -->
+          <input type="date" id="input-task-due" class="date-input" title="Fecha límite opcional" />
+        </div>
+
+        <!-- Grupo de Recordatorio con Hora Específica -->
+        <div class="reminder-control-group">
+          <div class="reminder-input-row">
+            <span class="reminder-label">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              Hora del recordatorio:
+            </span>
+            <input 
+              type="datetime-local" 
+              id="input-task-reminder" 
+              class="date-input" 
+              title="Define fecha y hora exacta para disparar la alarma y notificación" 
+            />
+          </div>
+          <div class="preset-chips-row">
+            <span style="font-size: 0.7rem; color: var(--text-subtle); margin-right: 0.2rem;">Atajos:</span>
+            <button type="button" class="preset-chip" onclick="window.TaskFlowApp.setFormPresetMinutes('input-task-reminder', 5)">⏱️ +5 min</button>
+            <button type="button" class="preset-chip" onclick="window.TaskFlowApp.setFormPresetMinutes('input-task-reminder', 15)">⏱️ +15 min</button>
+            <button type="button" class="preset-chip" onclick="window.TaskFlowApp.setFormPresetMinutes('input-task-reminder', 60)">🕒 +1 hora</button>
+            <button type="button" class="preset-chip" onclick="window.TaskFlowApp.setFormPresetTomorrow('input-task-reminder', 9)">🌅 Mañana 09:00</button>
+            <button type="button" class="preset-chip" onclick="document.getElementById('input-task-reminder').value=''" title="Quitar hora de recordatorio">🧹 Sin alarma</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- PANEL DE CONTROLES: BÚSQUEDA, FILTROS Y CATEGORÍAS -->
+    <section class="controls-panel" id="controls-panel">
+      <!-- Búsqueda y Ordenamiento -->
+      <div class="search-sort-row">
+        <div class="search-wrapper">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="search" 
+            id="input-search-tasks" 
+            class="search-input" 
+            placeholder="Buscar por texto o etiqueta..." 
+            oninput="window.TaskFlowApp.handleSearch(this.value)"
+          />
+        </div>
+        <select id="select-sort-order" class="select-custom" onchange="window.TaskFlowApp.handleSortChange(this.value)" title="Ordenar Tareas">
+          <option value="reminder-asc">⏰ Próximos recordatorios</option>
+          <option value="created-desc">🕒 Más recientes</option>
+          <option value="created-asc">⏳ Más antiguas</option>
+          <option value="due-date">📅 Fecha límite</option>
+          <option value="priority">🔥 Prioridad</option>
+          <option value="alpha">🔤 Alfabético</option>
+        </select>
+      </div>
+
+      <!-- Filtros de Estado -->
+      <div class="filter-pills-row" id="filter-status-row" role="tablist">
+        <button class="filter-pill active" data-filter="all" onclick="window.TaskFlowApp.setFilter('all')">
+          Todas <span class="badge-count" id="badge-count-all">0</span>
+        </button>
+        <button class="filter-pill" data-filter="pending" onclick="window.TaskFlowApp.setFilter('pending')">
+          Pendientes <span class="badge-count" id="badge-count-pending">0</span>
+        </button>
+        <button class="filter-pill" data-filter="with-reminder" onclick="window.TaskFlowApp.setFilter('with-reminder')">
+          ⏰ Con Alarma <span class="badge-count" id="badge-count-reminders">0</span>
+        </button>
+        <button class="filter-pill" data-filter="completed" onclick="window.TaskFlowApp.setFilter('completed')">
+          Completadas <span class="badge-count" id="badge-count-completed">0</span>
+        </button>
+      </div>
+
+      <!-- Chips de Filtro por Categoría -->
+      <div class="category-chips" id="category-chips-row">
+        <button class="cat-chip active" data-cat="all" onclick="window.TaskFlowApp.setCategoryFilter('all')">
+          <span>✨ Todas las categorías</span>
+        </button>
+        <button class="cat-chip" data-cat="Trabajo" style="--chip-color: var(--cat-trabajo);" onclick="window.TaskFlowApp.setCategoryFilter('Trabajo')">
+          <span class="cat-dot"></span> Trabajo
+        </button>
+        <button class="cat-chip" data-cat="Personal" style="--chip-color: var(--cat-personal);" onclick="window.TaskFlowApp.setCategoryFilter('Personal')">
+          <span class="cat-dot"></span> Personal
+        </button>
+        <button class="cat-chip" data-cat="Estudio" style="--chip-color: var(--cat-estudio);" onclick="window.TaskFlowApp.setCategoryFilter('Estudio')">
+          <span class="cat-dot"></span> Estudio
+        </button>
+        <button class="cat-chip" data-cat="Hogar" style="--chip-color: var(--cat-hogar);" onclick="window.TaskFlowApp.setCategoryFilter('Hogar')">
+          <span class="cat-dot"></span> Hogar
+        </button>
+        <button class="cat-chip" data-cat="Urgente" style="--chip-color: var(--cat-urgente);" onclick="window.TaskFlowApp.setCategoryFilter('Urgente')">
+          <span class="cat-dot"></span> Urgente
+        </button>
+        <button class="cat-chip" data-cat="Parqueadero" style="--chip-color: var(--cat-otro);" onclick="window.TaskFlowApp.setCategoryFilter('Parqueadero')">
+          <span class="cat-dot"></span> Parqueadero
+        </button>
+      </div>
+    </section>
+
+    <!-- CONTENEDOR DE LA LISTA DE TAREAS -->
+    <main class="task-list" id="task-list-container" aria-live="polite">
+      <!-- Se inyecta dinámicamente con JavaScript -->
     </main>
+
+  </div>
+
+  <!-- ==========================================================================
+       MODAL DE EDICIÓN DE TAREA
+       ========================================================================== -->
+  <div class="modal-overlay" id="modal-edit-task" role="dialog" aria-modal="true" aria-labelledby="modal-edit-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-edit-title">Editar Tarea</h2>
+        <button class="action-btn" onclick="window.TaskFlowApp.closeModal('modal-edit-task')" aria-label="Cerrar modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-task-id" />
+        <div class="form-group">
+          <label class="form-label" for="edit-task-title">Título de la tarea</label>
+          <input type="text" id="edit-task-title" class="text-input" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-task-description">Notas / Apuntes escritos</label>
+          <textarea id="edit-task-description" class="textarea-notes" rows="2" placeholder="Notas, apuntes o detalles adicionales..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-task-category">Categoría</label>
+          <select id="edit-task-category" class="select-custom">
+            <option value="Trabajo">💼 Trabajo</option>
+            <option value="Personal">🌟 Personal</option>
+            <option value="Estudio">📚 Estudio</option>
+            <option value="Hogar">🏠 Hogar</option>
+            <option value="Urgente">🔥 Urgente</option>
+            <option value="Parqueadero">🚗 Parqueadero</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-task-priority">Prioridad</label>
+          <select id="edit-task-priority" class="select-custom">
+            <option value="alta">🔴 Alta</option>
+            <option value="media">⚡ Media</option>
+            <option value="baja">🟢 Baja</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-task-due">Fecha Límite</label>
+          <input type="date" id="edit-task-due" class="date-input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-task-reminder">
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              Hora de Recordatorio (Alarma con Notificación)
+            </span>
+          </label>
+          <input type="datetime-local" id="edit-task-reminder" class="date-input" />
+          <div class="preset-chips-row" style="margin-top: 0.35rem;">
+            <button type="button" class="preset-chip" onclick="window.TaskFlowApp.setFormPresetMinutes('edit-task-reminder', 5)">⏱️ +5m</button>
+            <button type="button" class="preset-chip" onclick="window.TaskFlowApp.setFormPresetMinutes('edit-task-reminder', 15)">⏱️ +15m</button>
+            <button type="button" class="preset-chip" onclick="window.TaskFlowApp.setFormPresetMinutes('edit-task-reminder', 60)">🕒 +1h</button>
+            <button type="button" class="preset-chip" onclick="window.TaskFlowApp.setFormPresetTomorrow('edit-task-reminder', 9)">🌅 Mañana 9am</button>
+            <button type="button" class="preset-chip" onclick="document.getElementById('edit-task-reminder').value=''">🧹 Sin recordatorio</button>
+          </div>
+        </div>
+
+        <!-- Sección de Gestión de Subtareas en el Modal -->
+        <div class="form-group" style="border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <label class="form-label" style="margin-bottom: 0;">Subtareas asociadas</label>
+            <span id="edit-subtasks-count" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">0 subtareas</span>
+          </div>
+
+          <!-- Input para agregar nueva subtarea dentro del modal -->
+          <div style="display: flex; gap: 0.4rem; margin-bottom: 0.5rem;">
+            <input 
+              type="text" 
+              id="edit-subtask-input" 
+              class="text-input" 
+              style="padding: 0.45rem 0.65rem; font-size: 0.82rem;" 
+              placeholder="+ Escribe una nueva subtarea..." 
+              onkeydown="if(event.key==='Enter'){event.preventDefault(); window.TaskFlowApp.addModalSubtask();}"
+            />
+            <button 
+              type="button" 
+              class="btn-secondary" 
+              style="padding: 0.45rem 0.75rem; font-size: 0.78rem; font-weight: 700; white-space: nowrap;" 
+              onclick="window.TaskFlowApp.addModalSubtask()"
+            >
+              + Añadir
+            </button>
+          </div>
+
+          <!-- Lista de subtareas en el modal -->
+          <div class="subtasks-list" id="edit-subtasks-container"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="window.TaskFlowApp.closeModal('modal-edit-task')">Cancelar</button>
+        <button class="btn-submit" onclick="window.TaskFlowApp.saveEditedTask()">Guardar Cambios</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Floating Action Button -->
-    <button id="fab" onclick="toggleModal(true)" class="fixed bottom-12 right-12 w-16 h-16 bg-white text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all z-50 group overflow-hidden">
-        <i data-lucide="plus" class="w-8 h-8"></i>
-    </button>
+  <!-- ==========================================================================
+       MODAL DE ALERTA DE RECORDATORIO (ALARMA SONANDO)
+       ========================================================================== -->
+  <div class="modal-overlay" id="modal-alarm-alert" role="dialog" aria-modal="true" aria-labelledby="alarm-modal-title">
+    <div class="modal-card alarm-modal-card">
+      <div class="alarm-hero-icon" aria-hidden="true">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+      </div>
 
-    <!-- Modal -->
-    <div id="modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
-        <div onclick="toggleModal(false)" class="absolute inset-0 bg-[#050505]/95 backdrop-blur-md"></div>
-        <div class="relative w-full max-w-lg glass rounded-3xl p-12 shadow-2xl overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 via-blue-500 to-purple-500"></div>
-            
-            <div class="flex justify-between items-center mb-10">
-                <h2 class="serif text-3xl italic">Nuevo Proyecto</h2>
-                <button onclick="toggleModal(false)" class="p-2 text-white/20 hover:text-white transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-
-            <form id="project-form" class="space-y-8">
-                <div class="space-y-2">
-                    <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">Nombre de la Aplicación</label>
-                    <input type="text" id="p-name" required class="w-full bg-white/5 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-white transition-all text-xl font-light" placeholder="Ej. Nexus Admin">
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">Descripción Corta</label>
-                    <textarea id="p-desc" required class="w-full bg-white/5 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-white transition-all text-lg font-light resize-none" placeholder="Define el propósito..." rows="2"></textarea>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">URL o Protocolo de App</label>
-                    <input type="text" id="p-url" required class="w-full bg-white/5 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-white transition-all text-sm font-light text-blue-400" placeholder="https://... o spotify:">
-                    <div class="pt-2 flex flex-wrap gap-2">
-                        <span class="text-[8px] text-white/20 uppercase">Ejemplos:</span>
-                        <button type="button" onclick="setExample('vscode://')" class="text-[8px] px-2 py-1 bg-white/5 rounded hover:bg-white/10 text-white/40">VS Code</button>
-                        <button type="button" onclick="setExample('slack://')" class="text-[8px] px-2 py-1 bg-white/5 rounded hover:bg-white/10 text-white/40">Slack</button>
-                        <button type="button" onclick="setExample('spotify:')" class="text-[8px] px-2 py-1 bg-white/5 rounded hover:bg-white/10 text-white/40">Spotify</button>
-                        <button type="button" onclick="setExample('whatsapp://')" class="text-[8px] px-2 py-1 bg-white/5 rounded hover:bg-white/10 text-white/40">WhatsApp</button>
-                    </div>
-                </div>
-
-                <button type="submit" class="w-full py-5 bg-white text-black font-bold uppercase tracking-[0.3em] text-[10px] rounded-xl hover:bg-neutral-200 transition-all active:scale-98 mt-4 shadow-xl">
-                    Registrar Proyecto
-                </button>
-            </form>
+      <div style="text-align: center; display: flex; flex-direction: column; gap: 0.35rem;">
+        <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 800; letter-spacing: 0.08em; color: #ef4444;">
+          ¡Hora del recordatorio cumplida!
+        </span>
+        <h2 class="modal-title" id="alarm-task-title" style="font-size: 1.35rem; line-height: 1.3;">
+          Título de la tarea
+        </h2>
+        <div id="alarm-task-meta" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 0.25rem; font-size: 0.8rem; color: var(--text-muted);">
+          <!-- Inyectado dinámicamente -->
         </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;">
+        <button class="btn-submit" style="justify-content: center; width: 100%; padding: 0.85rem;" onclick="window.TaskFlowApp.handleAlarmComplete()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Marcar como completada</span>
+        </button>
+
+        <div class="snooze-buttons-row">
+          <button class="btn-secondary" style="font-size: 0.8rem; padding: 0.5rem 0.8rem;" onclick="window.TaskFlowApp.handleAlarmSnooze(5)">
+            💤 Posponer 5 min
+          </button>
+          <button class="btn-secondary" style="font-size: 0.8rem; padding: 0.5rem 0.8rem;" onclick="window.TaskFlowApp.handleAlarmSnooze(15)">
+            ⏱️ Posponer 15 min
+          </button>
+          <button class="btn-secondary" style="font-size: 0.8rem; padding: 0.5rem 0.8rem;" onclick="window.TaskFlowApp.handleAlarmSnooze(60)">
+            🕒 Posponer 1 hora
+          </button>
+        </div>
+
+        <button class="action-btn" style="width: 100%; height: auto; padding: 0.5rem; margin-top: 0.25rem; font-size: 0.8rem;" onclick="window.TaskFlowApp.closeModal('modal-alarm-alert')">
+          Descartar alarma
+        </button>
+      </div>
     </div>
+  </div>
 
-    <!-- Footer -->
-    <footer class="px-12 pb-12 pt-8 flex flex-col md:flex-row justify-between items-center text-[10px] uppercase tracking-[0.2em] text-white/20 font-semibold gap-4 mt-auto">
-        <div class="flex gap-8">
-            <span>Dash.Central Public v1.1.0</span>
-            <span class="hidden md:inline">•</span>
-            <span>© 2026 Studio Design</span>
+  <!-- ==========================================================================
+       MODAL DE RESPALDO (EXPORTAR / IMPORTAR JSON)
+       ========================================================================== -->
+  <div class="modal-overlay" id="modal-backup" role="dialog" aria-modal="true" aria-labelledby="modal-backup-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-backup-title">Persistencia & Respaldo</h2>
+        <button class="action-btn" onclick="window.TaskFlowApp.closeModal('modal-backup')" aria-label="Cerrar modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-muted);">
+          Tus tareas se guardan automáticamente en tu navegador. Puedes generar copias de seguridad portátiles en formato JSON o restaurarlas en cualquier dispositivo.
+        </p>
+
+        <div class="backup-grid">
+          <!-- Exportar -->
+          <div class="backup-option-card" onclick="window.TaskFlowApp.exportTasksJSON()">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span class="backup-option-title">Exportar JSON</span>
+            <span class="backup-option-desc">Descarga una copia completa de tus tareas</span>
+          </div>
+
+          <!-- Importar -->
+          <div class="backup-option-card" onclick="document.getElementById('import-file-input').click();">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--prio-baja)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <span class="backup-option-title">Importar JSON</span>
+            <span class="backup-option-desc">Carga tareas desde un archivo previo</span>
+            <input type="file" id="import-file-input" accept=".json,application/json" style="display: none;" onchange="window.TaskFlowApp.handleImportFile(event)" />
+          </div>
+
+          <!-- Forzar actualización / Limpiar caché de la PWA -->
+          <div class="backup-option-card" onclick="window.TaskFlowApp.forceUpdateApp()" style="grid-column: 1 / -1; border-color: rgba(99, 102, 241, 0.4);">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+            </svg>
+            <span class="backup-option-title">Recargar Última Versión</span>
+            <span class="backup-option-desc">Limpia la caché de GitHub Pages y carga las nuevas funciones de inmediato</span>
+          </div>
         </div>
-        <div class="flex gap-8">
-            <a href="#" class="hover:text-white transition-colors">Repositorio</a>
-            <a href="#" class="hover:text-white transition-colors">Sistema</a>
-            <a href="#" class="hover:text-white transition-colors">Métricas</a>
-        </div>
-    </footer>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="window.TaskFlowApp.closeModal('modal-backup')">Cerrar</button>
+      </div>
+    </div>
+  </div>
 
-    <!-- Firebase SDK via CDN -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  <!-- CONTENEDOR DE NOTIFICACIONES TOAST -->
+  <div class="toast-container" id="toast-container" aria-live="assertive"></div>
 
-        // Configuración extraída de tu firebase-applet-config.json
-        const firebaseConfig = {
-            projectId: "gen-lang-client-0123960740",
-            appId: "1:159161090356:web:9f293342d02b732718e561",
-            apiKey: "AIzaSyCyAqlNcJUqif8G07eApBbJDvjH4YXLodk",
-            authDomain: "gen-lang-client-0123960740.firebaseapp.com",
-            storageBucket: "gen-lang-client-0123960740.firebasestorage.app",
-            messagingSenderId: "159161090356"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        // ID de la base de datos específica de tu proyecto
-        const db = getFirestore(app, "ai-studio-bf198e37-1b09-4edf-9c9f-d0cf587f23aa");
-
-        // --- PWA Logic ---
-        let deferredPrompt;
-        const installBtn = document.getElementById('install-btn');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.classList.remove('hidden');
-        });
-
-        installBtn.addEventListener('click', async () => {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                installBtn.classList.add('hidden');
-                deferredPrompt = null;
-            }
-        });
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
-            });
-        }
-        // ------------------
-
-        let allProjects = [];
-        let searchTerm = "";
-
-        // UI Selectors
-        const projectsGrid = document.getElementById('projects-grid');
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const projectCountEl = document.getElementById('project-count');
-        const searchInput = document.getElementById('search-input');
-        const projectForm = document.getElementById('project-form');
-        const modalOverlay = document.getElementById('modal-overlay');
-
-        // Functions
-        window.setExample = (protocol) => {
-            document.getElementById('p-url').value = protocol;
-            document.getElementById('p-url').focus();
-        };
-
-        window.toggleModal = (isOpen) => {
-            modalOverlay.classList.toggle('hidden', !isOpen);
-            if (isOpen) {
-                document.getElementById('p-name').focus();
-            }
-        };
-
-        window.deleteProject = async (id) => {
-            if (confirm("¿Estás seguro de eliminar este proyecto de la lista pública?")) {
-                try {
-                    await deleteDoc(doc(db, 'projects', id));
-                } catch (error) {
-                    console.error("Delete Error:", error);
-                    alert("Error al eliminar: Verifica las reglas de seguridad.");
-                }
-            }
-        };
-
-        const renderProjects = () => {
-            const filtered = allProjects.filter(p => 
-                p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                p.description.toLowerCase().includes(searchTerm.toLowerCase())
+  <!-- ==========================================================================
+       JAVASCRIPT MONOLÍTICO: PWA SERVICE WORKER Y LÓGICA DE NEGOCIO
+       ========================================================================== -->
+  <script>
+    /**
+     * REGISTRO DEL SERVICE WORKER EMBEBIDO MEDIANTE BLOB
+     * Proporciona capacidades completas de Progressive Web App (PWA) 100% offline.
+     */
+    (function registerEmbeddedServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        const swScript = `
+          const CACHE_NAME = 'taskflow-pwa-v2.4';
+          self.addEventListener('install', (event) => {
+            self.skipWaiting();
+          });
+          self.addEventListener('activate', (event) => {
+            event.waitUntil(
+              caches.keys().then((keys) => {
+                return Promise.all(
+                  keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+                );
+              }).then(() => self.clients.claim())
             );
+          });
+          self.addEventListener('fetch', (event) => {
+            if (event.request.method !== 'GET') return;
+            // Estrategia Network-First para navegación y HTML: busca siempre la versión más reciente
+            event.respondWith(
+              fetch(event.request)
+                .then((networkResponse) => {
+                  if (networkResponse && networkResponse.status === 200) {
+                    const responseClone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+                  }
+                  return networkResponse;
+                })
+                .catch(() => caches.match(event.request))
+            );
+          });
+        `;
 
-            const colors = ['bg-orange-500', 'bg-blue-500', 'bg-purple-500', 'bg-emerald-500', 'bg-rose-500', 'bg-amber-500'];
+        try {
+          const blob = new Blob([swScript], { type: 'application/javascript' });
+          const swUrl = URL.createObjectURL(blob);
+          navigator.serviceWorker.register(swUrl)
+            .then(() => console.log('Service Worker PWA v2.2 activo y listo para funcionamiento offline.'))
+            .catch((err) => console.warn('Aviso de Service Worker:', err.message));
+        } catch (e) {
+          console.warn('Registro SW en modo contingencia.');
+        }
+      }
+    })();
+
+    /**
+     * MÓDULO PRINCIPAL DE LA APLICACIÓN TASKFLOW
+     */
+    window.TaskFlowApp = (function () {
+      // Claves de almacenamiento
+      const STORAGE_KEY = 'taskflow_tasks_data_v1';
+      const THEME_KEY = 'taskflow_theme_pref';
+      const DRAFT_KEY = 'taskflow_form_draft_v2';
+      const COLLAPSED_KEY = 'taskflow_collapsed_tasks_v1';
+
+      // Categorías de configuración
+      const CATEGORY_MAP = {
+        'Trabajo': { color: 'var(--cat-trabajo)', label: 'Trabajo' },
+        'Personal': { color: 'var(--cat-personal)', label: 'Personal' },
+        'Estudio': { color: 'var(--cat-estudio)', label: 'Estudio' },
+        'Hogar': { color: 'var(--cat-hogar)', label: 'Hogar' },
+        'Urgente': { color: 'var(--cat-urgente)', label: 'Urgente' },
+        'Parqueadero': { color: 'var(--cat-otro)', label: 'Parqueadero' }
+      };
+
+      // Tareas de demostración iniciales con recordatorios, notas y subtareas
+      const nowMs = Date.now();
+      const inTenMins = new Date(nowMs + 10 * 60 * 1000);
+      const tomorrowNine = new Date(nowMs + 24 * 60 * 60 * 1000);
+      tomorrowNine.setHours(9, 0, 0, 0);
+
+      const INITIAL_TASKS = [
+        {
+          id: 'demo-1',
+          title: 'Pagar la factura de servicios y confirmar comprobante',
+          description: 'Revisar saldo en cuenta bancaria, efectuar pago y guardar el PDF del soporte.',
+          category: 'Personal',
+          priority: 'alta',
+          dueDate: new Date(nowMs + 86400000).toISOString().split('T')[0],
+          reminderTime: formatToDatetimeLocal(inTenMins),
+          reminderTriggered: false,
+          completed: false,
+          createdAt: nowMs - 3600000,
+          subtasks: [
+            { 
+              id: 'sub-1', 
+              title: 'Consultar saldo en la banca móvil', 
+              completed: true,
+              subtasks: []
+            },
+            { 
+              id: 'sub-2', 
+              title: 'Efectuar pago por PSE o transferencia', 
+              completed: false,
+              subtasks: [
+                { id: 'sub-2-1', title: 'Generar token o clave dinámica', completed: true, subtasks: [] },
+                { id: 'sub-2-2', title: 'Confirmar débito bancario exitoso', completed: false, subtasks: [] }
+              ]
+            },
+            { 
+              id: 'sub-3', 
+              title: 'Descargar comprobante en PDF', 
+              completed: false,
+              subtasks: []
+            }
+          ]
+        },
+        {
+          id: 'demo-2',
+          title: 'Revisión y exportación del informe mensual',
+          description: 'Consolidar métricas de productividad e incluir estadísticas de cumplimiento.',
+          category: 'Trabajo',
+          priority: 'media',
+          dueDate: new Date(nowMs + 172800000).toISOString().split('T')[0],
+          reminderTime: formatToDatetimeLocal(tomorrowNine),
+          reminderTriggered: false,
+          completed: false,
+          createdAt: nowMs - 7200000,
+          subtasks: [
+            { 
+              id: 'sub-4', 
+              title: 'Recopilar métricas de la semana', 
+              completed: true,
+              subtasks: []
+            },
+            { 
+              id: 'sub-5', 
+              title: 'Generar copia de respaldo en JSON', 
+              completed: false,
+              subtasks: [
+                { id: 'sub-5-1', title: 'Verificar integridad del archivo descargado', completed: false, subtasks: [] }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'demo-3',
+          title: 'Renovar boleto mensual de parqueadero',
+          description: 'Verificar tarifa del mes y registrar placa del vehículo.',
+          category: 'Parqueadero',
+          priority: 'alta',
+          dueDate: new Date(nowMs + 259200000).toISOString().split('T')[0],
+          reminderTime: '',
+          reminderTriggered: false,
+          completed: false,
+          createdAt: nowMs - 10800000,
+          subtasks: [
+            { id: 'sub-6', title: 'Confirmar número de puesto asignado', completed: false }
+          ]
+        },
+        {
+          id: 'demo-4',
+          title: 'Instalar la aplicación como PWA en pantalla de inicio',
+          description: 'Añadir a pantalla de inicio para acceso instantáneo sin conexión.',
+          category: 'Estudio',
+          priority: 'baja',
+          dueDate: '',
+          reminderTime: '',
+          reminderTriggered: false,
+          completed: true,
+          createdAt: nowMs - 14400000,
+          subtasks: [
+            { id: 'sub-7', title: 'Abrir menú del navegador y seleccionar "Instalar"', completed: true }
+          ]
+        }
+      ];
+
+      // Estado reactivo de la aplicación
+      let state = {
+        tasks: [],
+        collapsedTaskIds: new Set(), // IDs de tareas minimizadas
+        filter: 'all',          // 'all' | 'pending' | 'with-reminder' | 'completed'
+        categoryFilter: 'all',  // 'all' | 'Trabajo' | ...
+        searchQuery: '',
+        sortBy: 'created-desc', // 'created-desc' | 'created-asc' | 'reminder-asc' | 'due-date' | 'priority' | 'alpha'
+        theme: 'dark',
+        activeAlarmTaskId: null,
+        formDraftSubtasks: [],  // Subtareas temporales añadidas al formulario principal
+        editingSubtasks: []     // Subtareas que se editan en el modal
+      };
+
+      let audioCtx = null;
+      let reminderIntervalId = null;
+      let draftSaveTimer = null;
+
+      /**
+       * Helper para formatear objeto Date a formato ISO local (YYYY-MM-DDTHH:mm)
+       */
+      function formatToDatetimeLocal(dateObj) {
+        if (!dateObj || isNaN(new Date(dateObj).getTime())) return '';
+        const d = new Date(dateObj);
+        const pad = (n) => String(n).padStart(2, '0');
+        const year = d.getFullYear();
+        const month = pad(d.getMonth() + 1);
+        const day = pad(d.getDate());
+        const hours = pad(d.getHours());
+        const minutes = pad(d.getMinutes());
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
+
+      /**
+       * Persistencia Local: Tareas minimizadas / colapsadas
+       */
+      function loadCollapsedTasks() {
+        try {
+          const raw = localStorage.getItem(COLLAPSED_KEY);
+          if (raw) {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr)) {
+              state.collapsedTaskIds = new Set(arr);
+            }
+          }
+        } catch (e) {
+          console.warn('Error al cargar tareas colapsadas:', e);
+          state.collapsedTaskIds = new Set();
+        }
+      }
+
+      function saveCollapsedTasks() {
+        try {
+          localStorage.setItem(COLLAPSED_KEY, JSON.stringify(Array.from(state.collapsedTaskIds)));
+        } catch (e) {
+          console.warn('Error al guardar tareas colapsadas:', e);
+        }
+      }
+
+      /**
+       * Inicialización de la aplicación
+       */
+      function init() {
+        loadTheme();
+        loadTasks();
+        loadCollapsedTasks();
+        initFormDraft();
+        render();
+        setupEventListeners();
+        updateNotificationPermissionUI();
+        startReminderEngine();
+      }
+
+      /**
+       * Configuración de oyentes de eventos globales
+       */
+      function setupEventListeners() {
+        // Toggle de Tema
+        const btnTheme = document.getElementById('btn-theme-toggle');
+        if (btnTheme) {
+          btnTheme.addEventListener('click', toggleTheme);
+        }
+
+        // Modal Backup
+        const btnBackup = document.getElementById('btn-open-backup');
+        if (btnBackup) {
+          btnBackup.addEventListener('click', () => openModal('modal-backup'));
+        }
+
+        // Listeners para Autoguardado en tiempo real ("que se guarde lo escrito")
+        ['input-task-title', 'input-task-description'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.addEventListener('input', handleFormInput);
+          }
+        });
+
+        ['select-task-category', 'select-task-priority', 'input-task-due', 'input-task-reminder'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.addEventListener('change', handleFormInput);
+          }
+        });
+
+        // Cerrar modales con ESC
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            closeModal('modal-edit-task');
+            closeModal('modal-backup');
+            closeModal('modal-alarm-alert');
+          }
+        });
+
+        // Cerrar modal al hacer clic en el backdrop
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              closeModal(modal.id);
+            }
+          });
+        });
+      }
+
+      /**
+       * GESTIÓN DE BORRADOR AUTOMÁTICO ("SE GUARDE LO ESCRITO")
+       * Persiste en tiempo real el texto que el usuario está escribiendo en el formulario
+       * para evitar pérdida de datos si se recarga la página o se cierra el navegador.
+       */
+      function initFormDraft() {
+        try {
+          const draftJson = localStorage.getItem(DRAFT_KEY);
+          if (!draftJson) return;
+
+          const draft = JSON.parse(draftJson);
+          if (!draft) return;
+
+          let hasContent = false;
+
+          const titleInput = document.getElementById('input-task-title');
+          const descInput = document.getElementById('input-task-description');
+          const catSelect = document.getElementById('select-task-category');
+          const prioSelect = document.getElementById('select-task-priority');
+          const dueInput = document.getElementById('input-task-due');
+          const remInput = document.getElementById('input-task-reminder');
+
+          if (draft.title && titleInput) {
+            titleInput.value = draft.title;
+            hasContent = true;
+          }
+          if (draft.description && descInput) {
+            descInput.value = draft.description;
+            hasContent = true;
+          }
+          if (draft.category && catSelect) {
+            catSelect.value = draft.category;
+          }
+          if (draft.priority && prioSelect) {
+            prioSelect.value = draft.priority;
+          }
+          if (draft.dueDate && dueInput) {
+            dueInput.value = draft.dueDate;
+          }
+          if (draft.reminderTime && remInput) {
+            remInput.value = draft.reminderTime;
+          }
+          if (Array.isArray(draft.subtasks) && draft.subtasks.length > 0) {
+            state.formDraftSubtasks = draft.subtasks;
+            renderDraftSubtasks();
+            hasContent = true;
+          }
+
+          if (hasContent) {
+            const banner = document.getElementById('draft-restored-banner');
+            if (banner) banner.style.display = 'flex';
+            setAutosaveStatus('saved', 'Borrador cargado');
+          }
+        } catch (e) {
+          console.warn('Error al restaurar borrador:', e);
+        }
+      }
+
+      function handleFormInput() {
+        setAutosaveStatus('saving', 'Guardando...');
+        if (draftSaveTimer) clearTimeout(draftSaveTimer);
+        draftSaveTimer = setTimeout(() => {
+          saveFormDraft();
+        }, 200);
+      }
+
+      function saveFormDraft() {
+        try {
+          const titleInput = document.getElementById('input-task-title');
+          const descInput = document.getElementById('input-task-description');
+          const catSelect = document.getElementById('select-task-category');
+          const prioSelect = document.getElementById('select-task-priority');
+          const dueInput = document.getElementById('input-task-due');
+          const remInput = document.getElementById('input-task-reminder');
+
+          const draft = {
+            title: titleInput ? titleInput.value : '',
+            description: descInput ? descInput.value : '',
+            category: catSelect ? catSelect.value : 'Personal',
+            priority: prioSelect ? prioSelect.value : 'media',
+            dueDate: dueInput ? dueInput.value : '',
+            reminderTime: remInput ? remInput.value : '',
+            subtasks: state.formDraftSubtasks || [],
+            updatedAt: Date.now()
+          };
+
+          const hasData = (draft.title && draft.title.trim()) || 
+                          (draft.description && draft.description.trim()) || 
+                          (draft.subtasks && draft.subtasks.length > 0);
+
+          if (hasData) {
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+            setAutosaveStatus('saved', 'Guardado en vivo');
+          } else {
+            localStorage.removeItem(DRAFT_KEY);
+            setAutosaveStatus('saved', 'Listo');
+          }
+        } catch (e) {
+          console.warn('Error al guardar borrador:', e);
+        }
+      }
+
+      function clearFormDraft(userInitiated = false) {
+        localStorage.removeItem(DRAFT_KEY);
+        state.formDraftSubtasks = [];
+        renderDraftSubtasks();
+
+        const banner = document.getElementById('draft-restored-banner');
+        if (banner) banner.style.display = 'none';
+
+        if (userInitiated) {
+          const titleInput = document.getElementById('input-task-title');
+          const descInput = document.getElementById('input-task-description');
+          const dueInput = document.getElementById('input-task-due');
+          const remInput = document.getElementById('input-task-reminder');
+          if (titleInput) titleInput.value = '';
+          if (descInput) descInput.value = '';
+          if (dueInput) dueInput.value = '';
+          if (remInput) remInput.value = '';
+          showToast('Borrador descartado', 'info');
+          setAutosaveStatus('saved', 'Autoguardado activo');
+        }
+      }
+
+      function setAutosaveStatus(stateType, text) {
+        const pill = document.getElementById('autosave-pill');
+        const textEl = document.getElementById('autosave-text');
+        if (pill) {
+          pill.className = `autosave-pill ${stateType}`;
+        }
+        if (textEl) {
+          textEl.textContent = text;
+        }
+      }
+
+      /**
+       * SINTETIZADOR DE AUDIO WEB (Chime Melódico)
+       * Genera un acorde armónico sin depender de archivos de audio externos.
+       */
+      function playChimeSound() {
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+          
+          if (!audioCtx) {
+            audioCtx = new AudioContextClass();
+          }
+          if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
+
+          const now = audioCtx.currentTime;
+          // Melodía tipo campana / recordatorio (C5, E5, G5, C6)
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          
+          notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
             
-            document.getElementById('safe-loading').classList.add('hidden');
-            document.getElementById('main-content-area').classList.remove('hidden');
-            projectsGrid.innerHTML = filtered.map(p => {
-                const accentColor = colors[p.id.length % colors.length];
-                return `
-                    <div class="glass p-8 flex flex-col justify-between rounded-2xl group relative transition-all duration-300 hover:bg-white/[0.06] hover:border-white/15 hover:-translate-y-1">
-                        <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="deleteProject('${p.id}')" class="p-1.5 text-white/20 hover:text-rose-400 transition-colors">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                        <div>
-                            <div class="w-8 h-1 ${accentColor} mb-6 transition-all group-hover:w-12"></div>
-                            <h3 class="text-xl font-medium mb-2 text-white/90 group-hover:text-white capitalize">${p.name}</h3>
-                            <p class="text-sm text-white/50 leading-relaxed font-light line-clamp-3 mb-6">${p.description}</p>
-                        </div>
-                        <a href="${p.url}" target="_blank" class="mt-4 py-2.5 border border-white/10 rounded-lg text-[10px] uppercase tracking-[0.2em] font-semibold text-white/70 hover:bg-white hover:text-black transition-all text-center">
-                            Ir a la App
-                        </a>
-                    </div>
-                `;
-            }).join('');
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.12);
 
-            // Botón "Nueva Ranura" al final
-            projectsGrid.innerHTML += `
-                <button onclick="toggleModal(true)" class="glass p-8 flex flex-col items-center justify-center rounded-2xl border-dashed border-white/10 bg-transparent opacity-40 hover:opacity-100 transition-all group min-h-[250px]">
-                    <div class="text-center">
-                        <div class="text-4xl font-light mb-4 text-white/50 group-hover:text-orange-500 transition-colors">+</div>
-                        <p class="text-[10px] uppercase tracking-[0.2em] font-semibold">Nueva Ranura</p>
-                    </div>
-                </button>
-            `;
+            gain.gain.setValueAtTime(0.001, now + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.3, now + idx * 0.12 + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.12 + 0.65);
 
-            projectCountEl.textContent = `${allProjects.length} Unidades`;
-            lucide.createIcons();
-            
-            loadingOverlay.classList.add('hidden');
-            projectsGrid.classList.remove('hidden');
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now + idx * 0.12);
+            osc.stop(now + idx * 0.12 + 0.7);
+          });
+        } catch (e) {
+          console.warn('AudioContext no disponible:', e);
+        }
+      }
+
+      /**
+       * GESTIÓN DE PERMISOS DE NOTIFICACIONES
+       */
+      function requestNotificationPermission() {
+        if (!('Notification' in window)) {
+          showToast('Tu navegador no soporta la API de Notificaciones', 'error');
+          return;
+        }
+
+        // Desbloquear AudioContext en la interacción
+        playChimeSound();
+
+        Notification.requestPermission().then((permission) => {
+          updateNotificationPermissionUI();
+          if (permission === 'granted') {
+            showToast('¡Notificaciones activadas con éxito!', 'success');
+            // Enviar notificación de bienvenida / confirmación
+            sendBrowserNotification(
+              '🔔 ¡TaskFlow Notificaciones Activas!', 
+              'Recibirás recordatorios con alarma en la hora exacta que configures para tus tareas.'
+            );
+          } else if (permission === 'denied') {
+            showToast('Permiso de notificaciones bloqueado por el navegador', 'error');
+          }
+        }).catch((err) => {
+          console.error('Error al pedir permisos:', err);
+        });
+      }
+
+      function updateNotificationPermissionUI() {
+        const dot = document.getElementById('notif-status-dot');
+        const text = document.getElementById('notif-status-text');
+        const btn = document.getElementById('btn-request-notif');
+        const btnText = document.getElementById('btn-request-notif-text');
+        const bar = document.getElementById('notification-status-bar');
+
+        if (!('Notification' in window)) {
+          if (dot) dot.className = 'notif-dot denied';
+          if (text) text.textContent = 'Notificaciones: No soportadas en este navegador';
+          if (btn) btn.style.display = 'none';
+          return;
+        }
+
+        const perm = Notification.permission;
+
+        if (perm === 'granted') {
+          if (dot) dot.className = 'notif-dot granted';
+          if (text) text.innerHTML = '🔔 <strong>Recordatorios activos:</strong> Notificaciones del navegador habilitadas';
+          if (btnText) btnText.textContent = 'Notificaciones OK';
+          if (btn) {
+            btn.style.background = 'var(--bg-subtle)';
+            btn.style.color = 'var(--prio-baja)';
+            btn.style.border = '1px solid var(--border-color)';
+            btn.title = 'Permiso ya otorgado';
+          }
+          if (bar) bar.classList.remove('needs-permission');
+        } else if (perm === 'denied') {
+          if (dot) dot.className = 'notif-dot denied';
+          if (text) text.textContent = 'Recordatorios: Notificaciones bloqueadas en los ajustes del navegador';
+          if (btnText) btnText.textContent = 'Permiso Denegado';
+          if (btn) {
+            btn.style.background = 'rgba(239, 68, 68, 0.2)';
+            btn.style.color = '#ef4444';
+          }
+          if (bar) bar.classList.add('needs-permission');
+        } else {
+          // Default
+          if (dot) dot.className = 'notif-dot default';
+          if (text) text.textContent = 'Activa las notificaciones para que tus alarmas suenen a tiempo';
+          if (btnText) btnText.textContent = 'Activar Notificaciones';
+          if (bar) bar.classList.add('needs-permission');
+        }
+      }
+
+      function sendBrowserNotification(title, body, tag = 'taskflow-alert') {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try {
+            const notif = new Notification(title, {
+              body: body,
+              icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%236366f1"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>',
+              tag: tag,
+              requireInteraction: true,
+              silent: false
+            });
+
+            notif.onclick = function () {
+              window.focus();
+              notif.close();
+            };
+          } catch (e) {
+            console.warn('Error al disparar notificación:', e);
+          }
+        }
+      }
+
+      /**
+       * MOTOR DE VIGILANCIA DE RECORDATORIOS (Se ejecuta cada segundo)
+       */
+      function startReminderEngine() {
+        if (reminderIntervalId) clearInterval(reminderIntervalId);
+        
+        reminderIntervalId = setInterval(checkDueReminders, 1000);
+      }
+
+      function checkDueReminders() {
+        const now = Date.now();
+        let changed = false;
+
+        state.tasks.forEach(task => {
+          if (!task.reminderTime || task.completed || task.reminderTriggered) {
+            return;
+          }
+
+          const reminderTimestamp = new Date(task.reminderTime).getTime();
+          if (isNaN(reminderTimestamp)) return;
+
+          // Si el tiempo ya llegó o pasó (con un margen de 1 segundo)
+          if (now >= reminderTimestamp) {
+            task.reminderTriggered = true;
+            changed = true;
+            triggerAlarmForTask(task);
+          }
+        });
+
+        if (changed) {
+          saveTasks();
+          render();
+        }
+      }
+
+      /**
+       * DISPARAR ALARMA Y NOTIFICACIÓN PARA UNA TAREA
+       */
+      function triggerAlarmForTask(task) {
+        // 1. Sonido
+        playChimeSound();
+
+        // 2. Vibración móvil si está disponible
+        if ('vibrate' in navigator) {
+          try {
+            navigator.vibrate([200, 100, 200, 100, 200]);
+          } catch (e) {}
+        }
+
+        // 3. Notificación del Navegador
+        const timeFormatted = new Date(task.reminderTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        sendBrowserNotification(
+          `⏰ ¡Alarma: ${task.title}!`,
+          `Categoría: ${task.category} • Prioridad: ${task.priority.toUpperCase()}\nHora programada: ${timeFormatted}`,
+          `reminder-${task.id}`
+        );
+
+        // 4. Modal en pantalla
+        state.activeAlarmTaskId = task.id;
+        const alarmTitleEl = document.getElementById('alarm-task-title');
+        const alarmMetaEl = document.getElementById('alarm-task-meta');
+
+        if (alarmTitleEl) alarmTitleEl.textContent = task.title;
+        if (alarmMetaEl) {
+          alarmMetaEl.innerHTML = `
+            <span>🏷️ ${escapeHTML(task.category)}</span>
+            <span>•</span>
+            <span>🔥 Prioridad ${escapeHTML(task.priority)}</span>
+            <span>•</span>
+            <span>⏰ ${timeFormatted}</span>
+          `;
+        }
+
+        openModal('modal-alarm-alert');
+        showToast(`⏰ ¡Alarma activa: "${task.title}"!`, 'error');
+      }
+
+      /**
+       * Acciones del Modal de Alarma
+       */
+      function handleAlarmComplete() {
+        if (!state.activeAlarmTaskId) {
+          closeModal('modal-alarm-alert');
+          return;
+        }
+        toggleTask(state.activeAlarmTaskId);
+        closeModal('modal-alarm-alert');
+        state.activeAlarmTaskId = null;
+      }
+
+      function handleAlarmSnooze(minutes) {
+        if (!state.activeAlarmTaskId) {
+          closeModal('modal-alarm-alert');
+          return;
+        }
+        snoozeTask(state.activeAlarmTaskId, minutes);
+        closeModal('modal-alarm-alert');
+        state.activeAlarmTaskId = null;
+      }
+
+      function snoozeTask(taskId, minutes) {
+        const task = state.tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        const newTime = new Date(Date.now() + minutes * 60 * 1000);
+        task.reminderTime = formatToDatetimeLocal(newTime);
+        task.reminderTriggered = false;
+        
+        saveTasks();
+        render();
+        showToast(`Alarma pospuesta ${minutes} minutos (${newTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`, 'info');
+      }
+
+      /**
+       * Helpers de Presets para Formulario
+       */
+      function setFormPresetMinutes(inputId, minutes) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const target = new Date(Date.now() + minutes * 60 * 1000);
+        input.value = formatToDatetimeLocal(target);
+        showToast(`Recordatorio fijado en +${minutes} min (${target.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`, 'info');
+      }
+
+      function setFormPresetTomorrow(inputId, hour = 9) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(hour, 0, 0, 0);
+        input.value = formatToDatetimeLocal(tomorrow);
+        showToast(`Recordatorio fijado para mañana a las 09:00 AM`, 'info');
+      }
+
+      /**
+       * Test rápido en 5 segundos
+       */
+      function triggerQuickTest(seconds = 5) {
+        // Pedir permiso si no está otorgado
+        if ('Notification' in window && Notification.permission === 'default') {
+          requestNotificationPermission();
+        }
+
+        const testTime = new Date(Date.now() + seconds * 1000);
+        const testTask = {
+          id: 'test-' + Date.now(),
+          title: '🔔 Prueba de alarma y notificación en vivo',
+          category: 'Urgente',
+          priority: 'alta',
+          dueDate: '',
+          reminderTime: formatToDatetimeLocal(testTime),
+          reminderTriggered: false,
+          completed: false,
+          createdAt: Date.now()
         };
 
-        // Subscription a la base de datos
-        const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
-        onSnapshot(q, (snapshot) => {
-            allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderProjects();
-        }, (error) => {
-            console.error("Firestore Listen Error:", error);
-            document.body.innerHTML = `<div class="p-20 text-center serif italic text-xl">Error de conexión con Firebase. Revisa la consola.</div>`;
-        });
+        state.tasks.unshift(testTask);
+        saveTasks();
+        render();
 
-        // Búsqueda
-        searchInput.addEventListener('input', (e) => {
-            searchTerm = e.target.value;
-            renderProjects();
-        });
+        showToast(`⚡ Alarma de prueba creada. Sonará en ${seconds} segundos...`, 'info');
+      }
 
-        // Formulario
-        projectForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('p-name').value;
-            const description = document.getElementById('p-desc').value;
-            const url = document.getElementById('p-url').value;
+      /**
+       * NORMALIZACIÓN Y UTILIDADES RECURSIVAS DE SUBTAREAS ANIDADAS (SUB-SUBTAREAS)
+       */
+      function normalizeSubtaskItem(item, fallbackPrefix = 'sub') {
+        if (!item || typeof item !== 'object') {
+          return {
+            id: fallbackPrefix + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+            title: String(item || ''),
+            completed: false,
+            subtasks: []
+          };
+        }
+        return {
+          id: item.id || (fallbackPrefix + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4)),
+          title: String(item.title || ''),
+          completed: Boolean(item.completed),
+          subtasks: Array.isArray(item.subtasks) 
+            ? item.subtasks.map((c, idx) => normalizeSubtaskItem(c, 'subchild-' + idx)) 
+            : []
+        };
+      }
 
-            try {
-                await addDoc(collection(db, 'projects'), {
-                    name,
-                    description,
-                    url,
-                    ownerId: 'public',
-                    createdAt: serverTimestamp()
-                });
-                projectForm.reset();
-                toggleModal(false);
-            } catch (error) {
-                console.error("Add Error:", error);
-                alert("Error al guardar: Revisa si la URL es válida.");
+      function countAllSubtasks(subtasks) {
+        let total = 0;
+        let completed = 0;
+        if (!Array.isArray(subtasks)) return { total: 0, completed: 0, percent: 0 };
+
+        function walk(list) {
+          for (const item of list) {
+            total++;
+            if (item.completed) completed++;
+            if (Array.isArray(item.subtasks) && item.subtasks.length > 0) {
+              walk(item.subtasks);
             }
+          }
+        }
+        walk(subtasks);
+        const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+        return { total, completed, percent };
+      }
+
+      function findSubtaskInTree(subtasksList, targetId, parent = null) {
+        if (!Array.isArray(subtasksList)) return null;
+        for (let i = 0; i < subtasksList.length; i++) {
+          const item = subtasksList[i];
+          if (item.id === targetId) {
+            return { item, index: i, list: subtasksList, parent };
+          }
+          if (Array.isArray(item.subtasks) && item.subtasks.length > 0) {
+            const found = findSubtaskInTree(item.subtasks, targetId, item);
+            if (found) return found;
+          }
+        }
+        return null;
+      }
+
+      function normalizeTasks(rawTasks) {
+        if (!Array.isArray(rawTasks)) return [];
+        return rawTasks.map(t => ({
+          ...t,
+          description: t.description || '',
+          subtasks: Array.isArray(t.subtasks) ? t.subtasks.map(s => normalizeSubtaskItem(s)) : []
+        }));
+      }
+
+      /**
+       * Persistencia Local: Carga de tareas desde localStorage
+       */
+      function loadTasks() {
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            state.tasks = normalizeTasks(parsed);
+          } else {
+            state.tasks = normalizeTasks(INITIAL_TASKS);
+            saveTasks();
+          }
+        } catch (e) {
+          console.error('Error al leer de localStorage:', e);
+          state.tasks = normalizeTasks(INITIAL_TASKS);
+        }
+      }
+
+      /**
+       * Persistencia Local: Guardado automático
+       */
+      function saveTasks() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
+        } catch (e) {
+          console.error('Error al guardar en localStorage:', e);
+          showToast('Error al persistir cambios localmente', 'error');
+        }
+      }
+
+      /**
+       * Manejo de temas (Oscuro / Claro)
+       */
+      function loadTheme() {
+        const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+        setTheme(savedTheme);
+      }
+
+      function setTheme(theme) {
+        state.theme = theme;
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem(THEME_KEY, theme);
+
+        const moonIcon = document.getElementById('theme-icon-moon');
+        const sunIcon = document.getElementById('theme-icon-sun');
+        if (moonIcon && sunIcon) {
+          if (theme === 'dark') {
+            moonIcon.style.display = 'block';
+            sunIcon.style.display = 'none';
+          } else {
+            moonIcon.style.display = 'none';
+            sunIcon.style.display = 'block';
+          }
+        }
+      }
+
+      function toggleTheme() {
+        const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
+        setTheme(nextTheme);
+        showToast(`Tema ${nextTheme === 'dark' ? 'Oscuro' : 'Claro'} activado`, 'info');
+      }
+
+      /**
+       * GESTIÓN DE SUBTAREAS EN BORRADOR (FORMULARIO PRINCIPAL)
+       */
+      function addDraftSubtask() {
+        const input = document.getElementById('input-draft-subtask');
+        if (!input) return;
+        const title = input.value.trim();
+        if (!title) return;
+
+        state.formDraftSubtasks.push({
+          id: 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+          title: title,
+          completed: false,
+          subtasks: []
         });
 
-        // Inicializar iconos
-        lucide.createIcons();
-    </script>
+        input.value = '';
+        renderDraftSubtasks();
+        saveFormDraft();
+        input.focus();
+      }
+
+      function addDraftChildSubtaskPrompt(parentSubId, parentTitle) {
+        const title = prompt(`Añadir subtarea a "${parentTitle || 'subtarea'}":`);
+        if (!title || !title.trim()) return;
+
+        const found = findSubtaskInTree(state.formDraftSubtasks, parentSubId);
+        if (found) {
+          if (!Array.isArray(found.item.subtasks)) found.item.subtasks = [];
+          found.item.subtasks.push(normalizeSubtaskItem({ title: title.trim() }, 'draft-subchild'));
+          renderDraftSubtasks();
+          saveFormDraft();
+          showToast('Subtarea anidada añadida al borrador', 'success');
+        }
+      }
+
+      function removeDraftSubtask(subId) {
+        const found = findSubtaskInTree(state.formDraftSubtasks, subId);
+        if (found) {
+          found.list.splice(found.index, 1);
+          renderDraftSubtasks();
+          saveFormDraft();
+        }
+      }
+
+      function renderDraftSubtasks() {
+        const container = document.getElementById('draft-subtasks-container');
+        if (!container) return;
+
+        if (state.formDraftSubtasks.length === 0) {
+          container.innerHTML = '';
+          return;
+        }
+
+        container.innerHTML = state.formDraftSubtasks.map(sub => {
+          const childList = Array.isArray(sub.subtasks) ? sub.subtasks : [];
+          return `
+            <div style="display: flex; flex-direction: column; gap: 0.25rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.4rem 0.65rem; font-size: 0.8rem; width: 100%; box-sizing: border-box;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; width: 100%;">
+                <span style="font-weight: 600; color: var(--text-main); display: inline-flex; align-items: center; gap: 0.25rem; flex: 1 1 auto; min-width: 0; word-break: normal; overflow-wrap: break-word;">
+                  📌 ${escapeHTML(sub.title)}
+                </span>
+                <div style="display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0;">
+                  <button 
+                    type="button" 
+                    class="subtask-action-btn-nested"
+                    onclick="window.TaskFlowApp.addDraftChildSubtaskPrompt('${sub.id}', '${escapeHTML(sub.title)}')"
+                    title="Añadir subtarea a '${escapeHTML(sub.title)}'"
+                  >
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Subtarea</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    class="subtask-delete-btn" 
+                    style="width: 22px; height: 22px;"
+                    onclick="window.TaskFlowApp.removeDraftSubtask('${sub.id}')" 
+                    title="Quitar subtarea" 
+                    aria-label="Quitar subtarea"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              ${childList.length > 0 ? `
+                <div style="margin-left: 0.75rem; padding-left: 0.55rem; border-left: 2px dashed rgba(99, 102, 241, 0.35); display: flex; flex-direction: column; gap: 0.2rem; margin-top: 0.15rem; width: calc(100% - 0.75rem); box-sizing: border-box;">
+                  ${childList.map(c => `
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; font-size: 0.76rem; color: var(--text-muted); background: var(--bg-subtle); padding: 0.2rem 0.45rem; border-radius: 4px; width: 100%; box-sizing: border-box;">
+                      <span style="flex: 1 1 auto; min-width: 0; word-break: normal; overflow-wrap: break-word;">↳ ${escapeHTML(c.title)}</span>
+                      <button 
+                        type="button" 
+                        style="background: transparent; border: none; color: var(--text-subtle); cursor: pointer; padding: 0 0.2rem; font-size: 0.75rem; flex-shrink: 0;"
+                        onclick="window.TaskFlowApp.removeDraftSubtask('${c.id}')"
+                        title="Quitar subtarea anidada"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+
+      /**
+       * GESTIÓN DE SUBTAREAS DIRECTAS Y ANIDADAS EN CADA TAREA
+       */
+      function handleAddSubtaskInline(taskId, inputEl) {
+        if (!inputEl) return;
+        const title = inputEl.value.trim();
+        if (!title) return;
+
+        const task = state.tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        if (!Array.isArray(task.subtasks)) {
+          task.subtasks = [];
+        }
+
+        task.subtasks.push({
+          id: 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+          title: title,
+          completed: false,
+          subtasks: []
+        });
+
+        inputEl.value = '';
+        saveTasks();
+        render();
+        showToast('Subtarea añadida', 'success');
+      }
+
+      function handleAddChildSubtask(taskId, parentSubtaskId, inputEl) {
+        if (!inputEl) return;
+        const title = inputEl.value.trim();
+        if (!title) return;
+
+        const task = state.tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        const found = findSubtaskInTree(task.subtasks, parentSubtaskId);
+        if (found) {
+          if (!Array.isArray(found.item.subtasks)) {
+            found.item.subtasks = [];
+          }
+          found.item.subtasks.push(normalizeSubtaskItem({ title: title }, 'subchild'));
+          inputEl.value = '';
+          saveTasks();
+          render();
+          showToast('Subtarea anidada añadida', 'success');
+        }
+      }
+
+      function promptAddChildSubtask(taskId, parentSubtaskId, parentTitle) {
+        const container = document.getElementById(`nested-container-${taskId}-${parentSubtaskId}`);
+        if (container) {
+          const input = container.querySelector('.child-add-input');
+          if (input) {
+            input.focus();
+            input.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            return;
+          }
+        }
+
+        const title = prompt(`Añadir subtarea a "${parentTitle || 'subtarea'}":`);
+        if (title && title.trim()) {
+          const task = state.tasks.find(t => t.id === taskId);
+          if (!task) return;
+
+          const found = findSubtaskInTree(task.subtasks, parentSubtaskId);
+          if (found) {
+            if (!Array.isArray(found.item.subtasks)) {
+              found.item.subtasks = [];
+            }
+            found.item.subtasks.push(normalizeSubtaskItem({ title: title.trim() }, 'subchild'));
+            saveTasks();
+            render();
+            showToast('Subtarea anidada añadida', 'success');
+          }
+        }
+      }
+
+      function toggleSubtask(taskId, subtaskId) {
+        const task = state.tasks.find(t => t.id === taskId);
+        if (!task || !Array.isArray(task.subtasks)) return;
+
+        const found = findSubtaskInTree(task.subtasks, subtaskId);
+        if (!found) return;
+
+        found.item.completed = !found.item.completed;
+
+        const allStats = countAllSubtasks(task.subtasks);
+        if (allStats.total > 0 && allStats.completed === allStats.total) {
+          showToast(`¡Todas las subtareas completadas! 🎉`, 'success');
+        }
+
+        saveTasks();
+        render();
+      }
+
+      function deleteSubtask(taskId, subtaskId) {
+        const task = state.tasks.find(t => t.id === taskId);
+        if (!task || !Array.isArray(task.subtasks)) return;
+
+        const found = findSubtaskInTree(task.subtasks, subtaskId);
+        if (found) {
+          found.list.splice(found.index, 1);
+          saveTasks();
+          render();
+          showToast('Subtarea eliminada', 'info');
+        }
+      }
+
+      /**
+       * GESTIÓN DE SUBTAREAS EN MODAL DE EDICIÓN
+       */
+      function addModalSubtask() {
+        const input = document.getElementById('edit-subtask-input');
+        if (!input) return;
+        const title = input.value.trim();
+        if (!title) return;
+
+        state.editingSubtasks.push({
+          id: 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+          title: title,
+          completed: false,
+          subtasks: []
+        });
+
+        input.value = '';
+        renderModalSubtasks();
+        input.focus();
+      }
+
+      function addModalChildSubtask(parentSubId, inputEl) {
+        if (!inputEl) return;
+        const title = inputEl.value.trim();
+        if (!title) return;
+
+        const found = findSubtaskInTree(state.editingSubtasks, parentSubId);
+        if (found) {
+          if (!Array.isArray(found.item.subtasks)) {
+            found.item.subtasks = [];
+          }
+          found.item.subtasks.push(normalizeSubtaskItem({ title: title }, 'subchild'));
+          inputEl.value = '';
+          renderModalSubtasks();
+        }
+      }
+
+      function addModalChildSubtaskPrompt(parentSubId, parentTitle) {
+        const title = prompt(`Añadir subtarea a "${parentTitle || 'subtarea'}":`);
+        if (!title || !title.trim()) return;
+
+        const found = findSubtaskInTree(state.editingSubtasks, parentSubId);
+        if (found) {
+          if (!Array.isArray(found.item.subtasks)) {
+            found.item.subtasks = [];
+          }
+          found.item.subtasks.push(normalizeSubtaskItem({ title: title.trim() }, 'subchild'));
+          renderModalSubtasks();
+        }
+      }
+
+      function toggleModalSubtask(subId) {
+        const found = findSubtaskInTree(state.editingSubtasks, subId);
+        if (found) {
+          found.item.completed = !found.item.completed;
+          renderModalSubtasks();
+        }
+      }
+
+      function deleteModalSubtask(subId) {
+        const found = findSubtaskInTree(state.editingSubtasks, subId);
+        if (found) {
+          found.list.splice(found.index, 1);
+          renderModalSubtasks();
+        }
+      }
+
+      function renderModalSubtasks() {
+        const container = document.getElementById('edit-subtasks-container');
+        const countEl = document.getElementById('edit-subtasks-count');
+        if (!container) return;
+
+        const stats = countAllSubtasks(state.editingSubtasks);
+        if (countEl) {
+          countEl.textContent = `${stats.completed}/${stats.total} completadas`;
+        }
+
+        if (state.editingSubtasks.length === 0) {
+          container.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-subtle); margin: 0.25rem 0;">No hay subtareas añadidas.</p>`;
+          return;
+        }
+
+        container.innerHTML = state.editingSubtasks.map(sub => {
+          const childList = Array.isArray(sub.subtasks) ? sub.subtasks : [];
+          const childStats = countAllSubtasks(childList);
+
+          return `
+            <div class="subtask-node" style="margin-bottom: 0.35rem;">
+              <div class="subtask-row ${sub.completed ? 'completed' : ''}">
+                <button 
+                  type="button" 
+                  class="subtask-checkbox" 
+                  onclick="window.TaskFlowApp.toggleModalSubtask('${sub.id}')"
+                  title="${sub.completed ? 'Marcar pendiente' : 'Completar'}"
+                >
+                  ${sub.completed ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+                </button>
+                <span class="subtask-title">${escapeHTML(sub.title)}</span>
+
+                <div class="subtask-actions-group">
+                  ${childList.length > 0 ? `
+                    <span class="subtask-child-badge">🌿 ${childStats.completed}/${childStats.total}</span>
+                  ` : ''}
+
+                  <button 
+                    type="button" 
+                    class="subtask-action-btn-nested"
+                    onclick="window.TaskFlowApp.addModalChildSubtaskPrompt('${sub.id}', '${escapeHTML(sub.title)}')"
+                    title="Añadir subtarea"
+                  >
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Subtarea</span>
+                  </button>
+
+                  <button 
+                    type="button" 
+                    class="subtask-delete-btn" 
+                    onclick="window.TaskFlowApp.deleteModalSubtask('${sub.id}')" 
+                    title="Eliminar subtarea"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Subtareas anidadas en el modal -->
+              <div class="sub-nested-container">
+                ${childList.map(c => `
+                  <div class="sub-subtask-item ${c.completed ? 'completed' : ''}">
+                    <button 
+                      type="button" 
+                      class="subtask-checkbox" 
+                      onclick="window.TaskFlowApp.toggleModalSubtask('${c.id}')"
+                      title="${c.completed ? 'Marcar pendiente' : 'Completar'}"
+                    >
+                      ${c.completed ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+                    </button>
+                    <span class="subtask-title">${escapeHTML(c.title)}</span>
+                    <div class="subtask-actions-group">
+                      <button 
+                        type="button" 
+                        class="subtask-delete-btn" 
+                        style="width: 20px; height: 20px;"
+                        onclick="window.TaskFlowApp.deleteModalSubtask('${c.id}')" 
+                        title="Eliminar"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+
+                <div class="child-add-row">
+                  <input 
+                    type="text" 
+                    class="child-add-input" 
+                    placeholder="+ Subtarea para '${escapeHTML(sub.title)}'..."
+                    onkeydown="if(event.key==='Enter'){event.preventDefault(); window.TaskFlowApp.addModalChildSubtask('${sub.id}', this);}"
+                  />
+                  <button 
+                    type="button" 
+                    class="child-add-btn" 
+                    onclick="window.TaskFlowApp.addModalChildSubtask('${sub.id}', this.previousElementSibling)"
+                  >
+                    + Añadir
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      /**
+       * Agregar nueva tarea
+       */
+      function handleAddTask() {
+        const titleInput = document.getElementById('input-task-title');
+        const descInput = document.getElementById('input-task-description');
+        const catSelect = document.getElementById('select-task-category');
+        const prioSelect = document.getElementById('select-task-priority');
+        const dueInput = document.getElementById('input-task-due');
+        const reminderInput = document.getElementById('input-task-reminder');
+
+        const title = titleInput.value.trim();
+        if (!title) return;
+
+        const description = descInput ? descInput.value.trim() : '';
+        const reminderVal = reminderInput ? reminderInput.value : '';
+
+        // Si tiene recordatorio y no tiene permisos de notificación, solicitar amigablemente
+        if (reminderVal && 'Notification' in window && Notification.permission === 'default') {
+          requestNotificationPermission();
+        }
+
+        const newTask = {
+          id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+          title: title,
+          description: description,
+          category: catSelect ? catSelect.value : 'Personal',
+          priority: prioSelect ? prioSelect.value : 'media',
+          dueDate: dueInput ? dueInput.value : '',
+          reminderTime: reminderVal,
+          reminderTriggered: false,
+          completed: false,
+          createdAt: Date.now(),
+          subtasks: JSON.parse(JSON.stringify(state.formDraftSubtasks))
+        };
+
+        state.tasks.unshift(newTask);
+        saveTasks();
+        render();
+
+        // Limpiar inputs y borrador guardado
+        titleInput.value = '';
+        if (descInput) descInput.value = '';
+        if (dueInput) dueInput.value = '';
+        if (reminderInput) reminderInput.value = '';
+        clearFormDraft(false);
+
+        titleInput.focus();
+
+        if (reminderVal) {
+          const remDate = new Date(reminderVal);
+          showToast(`Tarea guardada con alarma para ${remDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, 'success');
+        } else {
+          showToast('Tarea agregada exitosamente', 'success');
+        }
+      }
+
+      /**
+       * Alternar estado completada / pendiente
+       */
+      function toggleTask(id) {
+        const task = state.tasks.find(t => t.id === id);
+        if (task) {
+          task.completed = !task.completed;
+          if (task.completed) {
+            task.reminderTriggered = true; // Desactivar alarmas si se completa
+          }
+          saveTasks();
+          render();
+          if (task.completed) {
+            showToast('¡Tarea completada!', 'success');
+          }
+        }
+      }
+
+      /**
+       * Alternar estado colapsado / minimizado de una tarea
+       */
+      function toggleCollapseTask(id) {
+        if (state.collapsedTaskIds.has(id)) {
+          state.collapsedTaskIds.delete(id);
+        } else {
+          state.collapsedTaskIds.add(id);
+        }
+        saveCollapsedTasks();
+        render();
+      }
+
+      /**
+       * Eliminar tarea
+       */
+      function deleteTask(id) {
+        const index = state.tasks.findIndex(t => t.id === id);
+        if (index !== -1) {
+          state.tasks.splice(index, 1);
+          if (state.collapsedTaskIds.has(id)) {
+            state.collapsedTaskIds.delete(id);
+            saveCollapsedTasks();
+          }
+          saveTasks();
+          render();
+          showToast(`Tarea eliminada`, 'info');
+        }
+      }
+
+      /**
+       * Abrir modal de edición
+       */
+      function openEditTask(id) {
+        const task = state.tasks.find(t => t.id === id);
+        if (!task) return;
+
+        document.getElementById('edit-task-id').value = task.id;
+        document.getElementById('edit-task-title').value = task.title;
+        document.getElementById('edit-task-description').value = task.description || '';
+        document.getElementById('edit-task-category').value = task.category || 'Personal';
+        document.getElementById('edit-task-priority').value = task.priority || 'media';
+        document.getElementById('edit-task-due').value = task.dueDate || '';
+        document.getElementById('edit-task-reminder').value = task.reminderTime || '';
+
+        state.editingSubtasks = JSON.parse(JSON.stringify(task.subtasks || []));
+        renderModalSubtasks();
+
+        openModal('modal-edit-task');
+      }
+
+      /**
+       * Guardar edición
+       */
+      function saveEditedTask() {
+        const id = document.getElementById('edit-task-id').value;
+        const task = state.tasks.find(t => t.id === id);
+        if (!task) return;
+
+        const newTitle = document.getElementById('edit-task-title').value.trim();
+        if (!newTitle) {
+          showToast('El título no puede estar vacío', 'error');
+          return;
+        }
+
+        const prevReminder = task.reminderTime;
+        const newReminder = document.getElementById('edit-task-reminder').value;
+
+        task.title = newTitle;
+        task.description = document.getElementById('edit-task-description').value.trim();
+        task.category = document.getElementById('edit-task-category').value;
+        task.priority = document.getElementById('edit-task-priority').value;
+        task.dueDate = document.getElementById('edit-task-due').value;
+        task.reminderTime = newReminder;
+        task.subtasks = JSON.parse(JSON.stringify(state.editingSubtasks));
+        
+        // Si se cambió o reprogramó el recordatorio, resetear el flag triggered
+        if (newReminder && newReminder !== prevReminder) {
+          task.reminderTriggered = false;
+        }
+
+        saveTasks();
+        render();
+        closeModal('modal-edit-task');
+        showToast('Cambios guardados con éxito', 'success');
+      }
+
+      /**
+       * Filtros y Búsqueda
+       */
+      function setFilter(filterType) {
+        state.filter = filterType;
+        document.querySelectorAll('#filter-status-row .filter-pill').forEach(pill => {
+          if (pill.getAttribute('data-filter') === filterType) {
+            pill.classList.add('active');
+          } else {
+            pill.classList.remove('active');
+          }
+        });
+        render();
+      }
+
+      function setCategoryFilter(category) {
+        state.categoryFilter = category;
+        document.querySelectorAll('#category-chips-row .cat-chip').forEach(chip => {
+          if (chip.getAttribute('data-cat') === category) {
+            chip.classList.add('active');
+          } else {
+            chip.classList.remove('active');
+          }
+        });
+        render();
+      }
+
+      function handleSearch(query) {
+        state.searchQuery = query.toLowerCase().trim();
+        render();
+      }
+
+      function handleSortChange(order) {
+        state.sortBy = order;
+        render();
+      }
+
+      /**
+       * Formateo legible de etiquetas de recordatorio
+       */
+      function formatReminderLabel(reminderStr, isTriggered, isCompleted) {
+        if (!reminderStr) return null;
+        const remDate = new Date(reminderStr);
+        if (isNaN(remDate.getTime())) return null;
+
+        const now = Date.now();
+        const diffMs = remDate.getTime() - now;
+        const diffMins = Math.round(diffMs / 60000);
+
+        const timeStr = remDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dateStr = remDate.toLocaleDateString([], { day: '2-digit', month: 'short' });
+
+        if (isCompleted) {
+          return { text: `⏰ ${timeStr}`, statusClass: 'past', tooltip: `Alarma programada: ${dateStr} ${timeStr}` };
+        }
+
+        if (isTriggered) {
+          return { text: `🚨 ¡Alarma disparada (${timeStr})!`, statusClass: 'ringing', tooltip: `La alarma sonó a las ${timeStr}` };
+        }
+
+        if (diffMs <= 0) {
+          return { text: `⚠️ Alarma vencida (${timeStr})`, statusClass: 'ringing', tooltip: `Debió sonar a las ${timeStr}` };
+        }
+
+        if (diffMins <= 5) {
+          return { text: `⏰ ¡En ${diffMins} min (${timeStr})!`, statusClass: 'due-soon', tooltip: `Alarma inminente a las ${timeStr}` };
+        }
+
+        if (diffMins < 60) {
+          return { text: `⏰ En ${diffMins} min`, statusClass: '', tooltip: `Alarma a las ${timeStr}` };
+        }
+
+        const isToday = new Date().toDateString() === remDate.toDateString();
+        if (isToday) {
+          return { text: `⏰ Hoy ${timeStr}`, statusClass: '', tooltip: `Alarma programada hoy a las ${timeStr}` };
+        }
+
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        if (tomorrow.toDateString() === remDate.toDateString()) {
+          return { text: `⏰ Mañana ${timeStr}`, statusClass: '', tooltip: `Alarma programada mañana a las ${timeStr}` };
+        }
+
+        return { text: `⏰ ${dateStr} ${timeStr}`, statusClass: '', tooltip: `Alarma programada para ${dateStr} ${timeStr}` };
+      }
+
+      /**
+       * Persistencia Dual: Exportar a archivo JSON
+       */
+      function exportTasksJSON() {
+        try {
+          const exportData = {
+            appName: 'TaskFlow PWA',
+            version: '1.1',
+            exportedAt: new Date().toISOString(),
+            totalTasks: state.tasks.length,
+            tasks: state.tasks
+          };
+
+          const jsonStr = JSON.stringify(exportData, null, 2);
+          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          
+          const a = document.createElement('a');
+          const dateStr = new Date().toISOString().split('T')[0];
+          a.href = url;
+          a.download = `taskflow-respaldo-${dateStr}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          closeModal('modal-backup');
+          showToast(`Respaldo descargado (${state.tasks.length} tareas)`, 'success');
+        } catch (e) {
+          console.error('Error al exportar:', e);
+          showToast('Error al generar archivo de respaldo', 'error');
+        }
+      }
+
+      /**
+       * Persistencia Dual: Importar desde archivo JSON
+       */
+      function handleImportFile(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const data = JSON.parse(e.target.result);
+            let importedTasks = [];
+
+            if (Array.isArray(data)) {
+              importedTasks = data;
+            } else if (data && Array.isArray(data.tasks)) {
+              importedTasks = data.tasks;
+            } else {
+              throw new Error('El archivo no contiene un formato de tareas válido.');
+            }
+
+            // Normalización y validación con soporte para subtareas anidadas
+            const validTasks = importedTasks.map((t, idx) => ({
+              id: t.id || 'imp-' + Date.now() + '-' + idx,
+              title: String(t.title || 'Tarea sin título'),
+              description: String(t.description || ''),
+              category: t.category || 'Personal',
+              priority: ['alta', 'media', 'baja'].includes(t.priority) ? t.priority : 'media',
+              dueDate: t.dueDate || '',
+              reminderTime: t.reminderTime || '',
+              reminderTriggered: Boolean(t.reminderTriggered),
+              completed: Boolean(t.completed),
+              createdAt: t.createdAt || Date.now(),
+              subtasks: Array.isArray(t.subtasks) ? t.subtasks.map((s, sIdx) => normalizeSubtaskItem(s, 'imp-sub-' + sIdx)) : []
+            }));
+
+            state.tasks = validTasks;
+            saveTasks();
+            render();
+
+            closeModal('modal-backup');
+            showToast(`${validTasks.length} tareas importadas con éxito`, 'success');
+            event.target.value = '';
+          } catch (err) {
+            console.error('Error al importar:', err);
+            showToast('Formato JSON no válido o corrupto', 'error');
+          }
+        };
+
+        reader.readAsText(file);
+      }
+
+      /**
+       * Forzar actualización de la PWA (limpieza de caché y recarga de la última versión)
+       */
+      function forceUpdateApp() {
+        showToast('Comprobando actualización y limpiando caché...', 'info');
+        if ('caches' in window) {
+          caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+        }
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            for (let reg of regs) reg.unregister();
+          });
+        }
+        setTimeout(() => {
+          window.location.reload();
+        }, 600);
+      }
+
+      /**
+       * Renderizado reactivo de la interfaz
+       */
+      function render() {
+        const totalCount = state.tasks.length;
+        const pendingCount = state.tasks.filter(t => !t.completed).length;
+        const reminderCount = state.tasks.filter(t => Boolean(t.reminderTime) && !t.completed).length;
+        const completedCount = totalCount - pendingCount;
+        const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+        // Actualizar Estadísticas
+        const elTotal = document.getElementById('stat-total-count');
+        const elPending = document.getElementById('stat-pending-count');
+        const elCompleted = document.getElementById('stat-completed-count');
+        if (elTotal) elTotal.textContent = totalCount;
+        if (elPending) elPending.textContent = pendingCount;
+        if (elCompleted) elCompleted.textContent = completedCount;
+
+        // Actualizar Badges de Filtro
+        const bAll = document.getElementById('badge-count-all');
+        const bPend = document.getElementById('badge-count-pending');
+        const bRem = document.getElementById('badge-count-reminders');
+        const bComp = document.getElementById('badge-count-completed');
+        if (bAll) bAll.textContent = totalCount;
+        if (bPend) bPend.textContent = pendingCount;
+        if (bRem) bRem.textContent = reminderCount;
+        if (bComp) bComp.textContent = completedCount;
+
+        // Barra de Progreso
+        const elPercentText = document.getElementById('progress-percentage-text');
+        const elBarFill = document.getElementById('progress-bar-fill');
+        if (elPercentText) elPercentText.textContent = `${percent}%`;
+        if (elBarFill) elBarFill.style.width = `${percent}%`;
+
+        // Filtrado
+        let filtered = state.tasks.filter(task => {
+          // Filtro por Estado
+          if (state.filter === 'pending' && task.completed) return false;
+          if (state.filter === 'completed' && !task.completed) return false;
+          if (state.filter === 'with-reminder' && (!task.reminderTime || task.completed)) return false;
+
+          // Filtro por Categoría
+          if (state.categoryFilter !== 'all' && task.category !== state.categoryFilter) return false;
+
+          // Filtro por Búsqueda (incluyendo notas y subtareas recursivas)
+          if (state.searchQuery) {
+            const q = state.searchQuery;
+            const matchTitle = (task.title || '').toLowerCase().includes(q);
+            const matchDesc = (task.description || '').toLowerCase().includes(q);
+            const matchCat = (task.category || '').toLowerCase().includes(q);
+            function checkSubMatch(subs) {
+              if (!Array.isArray(subs)) return false;
+              return subs.some(s => (s.title || '').toLowerCase().includes(q) || checkSubMatch(s.subtasks));
+            }
+            const matchSub = checkSubMatch(task.subtasks);
+            if (!matchTitle && !matchDesc && !matchCat && !matchSub) return false;
+          }
+
+          return true;
+        });
+
+        // Ordenamiento
+        filtered.sort((a, b) => {
+          if (state.sortBy === 'reminder-asc') {
+            if (!a.reminderTime) return 1;
+            if (!b.reminderTime) return -1;
+            return new Date(a.reminderTime).getTime() - new Date(b.reminderTime).getTime();
+          }
+          if (state.sortBy === 'created-desc') return (b.createdAt || 0) - (a.createdAt || 0);
+          if (state.sortBy === 'created-asc') return (a.createdAt || 0) - (b.createdAt || 0);
+          if (state.sortBy === 'alpha') return a.title.localeCompare(b.title);
+          if (state.sortBy === 'priority') {
+            const weight = { 'alta': 3, 'media': 2, 'baja': 1 };
+            return (weight[b.priority] || 2) - (weight[a.priority] || 2);
+          }
+          if (state.sortBy === 'due-date') {
+            if (!a.dueDate) return 1;
+            if (!b.dueDate) return -1;
+            return a.dueDate.localeCompare(b.dueDate);
+          }
+          return 0;
+        });
+
+        // Renderizado del DOM de Tareas
+        const listContainer = document.getElementById('task-list-container');
+        if (!listContainer) return;
+
+        if (filtered.length === 0) {
+          listContainer.innerHTML = `
+            <div class="empty-state" id="empty-state-view">
+              <div class="empty-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="m9 12 2 2 4-4"></path>
+                </svg>
+              </div>
+              <h3 class="empty-title">No hay tareas en esta vista</h3>
+              <p class="empty-desc">Crea una nueva tarea con el formulario superior o ajusta los filtros seleccionados.</p>
+            </div>
+          `;
+          return;
+        }
+
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        const html = filtered.map(task => {
+          const isOverdue = task.dueDate && task.dueDate < todayStr && !task.completed;
+          const catInfo = CATEGORY_MAP[task.category] || { color: 'var(--accent)', label: task.category || 'General' };
+          const isCollapsed = state.collapsedTaskIds.has(task.id);
+
+          // Datos de Recordatorio
+          const reminderMeta = formatReminderLabel(task.reminderTime, task.reminderTriggered, task.completed);
+
+          // Subtareas y estadísticas recursivas
+          const subtasks = Array.isArray(task.subtasks) ? task.subtasks : [];
+          const subStats = countAllSubtasks(subtasks);
+          const totalSub = subStats.total;
+          const doneSub = subStats.completed;
+          const subPercent = subStats.percent;
+
+          // Prioridades
+          let prioLabel = 'Media';
+          let prioColor = 'var(--prio-media)';
+          let prioBg = 'rgba(245, 158, 11, 0.15)';
+
+          if (task.priority === 'alta') {
+            prioLabel = 'Alta';
+            prioColor = 'var(--prio-alta)';
+            prioBg = 'rgba(239, 68, 68, 0.15)';
+          } else if (task.priority === 'baja') {
+            prioLabel = 'Baja';
+            prioColor = 'var(--prio-baja)';
+            prioBg = 'rgba(16, 185, 129, 0.15)';
+          }
+
+          return `
+            <article class="task-item ${task.completed ? 'completed' : ''} ${isCollapsed ? 'is-collapsed' : ''}" id="task-item-${task.id}" data-id="${task.id}">
+              <!-- Checkbox -->
+              <button 
+                class="custom-checkbox" 
+                onclick="window.TaskFlowApp.toggleTask('${task.id}')"
+                aria-label="${task.completed ? 'Marcar como pendiente' : 'Marcar como completada'}"
+                title="${task.completed ? 'Desmarcar' : 'Completar'}"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </button>
+
+              <!-- Texto y Metadatos -->
+              <div class="task-content">
+                <div class="task-title" onclick="window.TaskFlowApp.toggleCollapseTask('${task.id}')" style="cursor: pointer;" title="${isCollapsed ? 'Clic para expandir subtareas' : 'Clic para minimizar subtareas'}">${escapeHTML(task.title)}</div>
+
+                <!-- Notas / Descripción guardada si existe -->
+                ${task.description ? `
+                  <div class="task-desc-box">${escapeHTML(task.description)}</div>
+                ` : ''}
+
+                <!-- Subtareas y Progreso Jerárquico -->
+                <div class="task-subtasks-container">
+                  ${totalSub > 0 ? `
+                    <div class="subtasks-header" onclick="window.TaskFlowApp.toggleCollapseTask('${task.id}')" style="cursor: pointer;" title="Minimizar / Ocultar subtareas">
+                      <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                        Subtareas (${doneSub}/${totalSub})
+                      </span>
+                      <div class="subtasks-progress-bar" title="${subPercent}% completado">
+                        <div class="subtasks-progress-fill" style="width: ${subPercent}%;"></div>
+                      </div>
+                    </div>
+                    <div class="subtasks-list">
+                      ${subtasks.map(s => {
+                        const childList = Array.isArray(s.subtasks) ? s.subtasks : [];
+                        const childStats = countAllSubtasks(childList);
+
+                        return `
+                          <div class="subtask-node" id="subtask-node-${task.id}-${s.id}">
+                            <div class="subtask-row ${s.completed ? 'completed' : ''}">
+                              <button 
+                                type="button" 
+                                class="subtask-checkbox" 
+                                onclick="window.TaskFlowApp.toggleSubtask('${task.id}', '${s.id}')"
+                                aria-label="${s.completed ? 'Desmarcar subtarea' : 'Completar subtarea'}"
+                                title="${s.completed ? 'Desmarcar subtarea' : 'Completar subtarea'}"
+                              >
+                                ${s.completed ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+                              </button>
+                              <span class="subtask-title">${escapeHTML(s.title)}</span>
+
+                              <div class="subtask-actions-group">
+                                ${childList.length > 0 ? `
+                                  <span class="subtask-child-badge" title="${childStats.completed}/${childStats.total} subtareas anidadas completadas">
+                                    🌿 ${childStats.completed}/${childStats.total}
+                                  </span>
+                                ` : ''}
+
+                                <!-- Botón para añadir subtarea a esta subtarea -->
+                                <button 
+                                  type="button" 
+                                  class="subtask-action-btn-nested"
+                                  onclick="window.TaskFlowApp.promptAddChildSubtask('${task.id}', '${s.id}', '${escapeHTML(s.title)}')"
+                                  title="Añadir subtarea a '${escapeHTML(s.title)}'"
+                                  aria-label="Añadir subtarea"
+                                >
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                  <span>Subtarea</span>
+                                </button>
+
+                                <!-- Eliminar subtarea -->
+                                <button 
+                                  type="button" 
+                                  class="subtask-delete-btn" 
+                                  onclick="window.TaskFlowApp.deleteSubtask('${task.id}', '${s.id}')" 
+                                  title="Eliminar subtarea"
+                                  aria-label="Eliminar subtarea"
+                                >
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                              </div>
+                            </div>
+
+                            <!-- Contenedor anidado de sub-subtareas con input rápido -->
+                            <div class="sub-nested-container" id="nested-container-${task.id}-${s.id}">
+                              ${childList.length > 0 ? `
+                                <div class="sub-subtasks-tree">
+                                  ${childList.map(c => {
+                                    const grandChildren = Array.isArray(c.subtasks) ? c.subtasks : [];
+                                    return `
+                                      <div class="sub-subtask-item ${c.completed ? 'completed' : ''}" id="subchild-${task.id}-${c.id}">
+                                        <button 
+                                          type="button" 
+                                          class="subtask-checkbox" 
+                                          onclick="window.TaskFlowApp.toggleSubtask('${task.id}', '${c.id}')"
+                                          aria-label="${c.completed ? 'Desmarcar' : 'Completar'}"
+                                          title="${c.completed ? 'Desmarcar' : 'Completar'}"
+                                        >
+                                          ${c.completed ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+                                        </button>
+                                        <span class="subtask-title">${escapeHTML(c.title)}</span>
+                                        <div class="subtask-actions-group">
+                                          <button 
+                                            type="button" 
+                                            class="subtask-action-btn-nested"
+                                            style="padding: 0.15rem 0.35rem; font-size: 0.68rem;"
+                                            onclick="window.TaskFlowApp.promptAddChildSubtask('${task.id}', '${c.id}', '${escapeHTML(c.title)}')"
+                                            title="Añadir subtarea"
+                                            aria-label="Añadir subtarea"
+                                          >
+                                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                            <span>Subtarea</span>
+                                          </button>
+                                          <button 
+                                            type="button" 
+                                            class="subtask-delete-btn" 
+                                            style="width: 22px; height: 22px;"
+                                            onclick="window.TaskFlowApp.deleteSubtask('${task.id}', '${c.id}')" 
+                                            title="Eliminar subtarea"
+                                            aria-label="Eliminar subtarea"
+                                          >
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                          </button>
+                                        </div>
+                                      </div>
+                                      ${grandChildren.length > 0 ? `
+                                        <div style="margin-left: 1.25rem; padding-left: 0.5rem; border-left: 2px dashed rgba(99, 102, 241, 0.25); display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.25rem;">
+                                          ${grandChildren.map(gc => `
+                                            <div class="sub-subtask-item ${gc.completed ? 'completed' : ''}" id="grandchild-${task.id}-${gc.id}">
+                                              <button 
+                                                type="button" 
+                                                class="subtask-checkbox" 
+                                                onclick="window.TaskFlowApp.toggleSubtask('${task.id}', '${gc.id}')"
+                                                title="${gc.completed ? 'Desmarcar' : 'Completar'}"
+                                              >
+                                                ${gc.completed ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+                                              </button>
+                                              <span class="subtask-title">${escapeHTML(gc.title)}</span>
+                                              <button 
+                                                type="button" 
+                                                class="subtask-delete-btn" 
+                                                style="width: 20px; height: 20px;"
+                                                onclick="window.TaskFlowApp.deleteSubtask('${task.id}', '${gc.id}')" 
+                                                title="Eliminar"
+                                              >
+                                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                              </button>
+                                            </div>
+                                          `).join('')}
+                                        </div>
+                                      ` : ''}
+                                    `;
+                                  }).join('')}
+                                </div>
+                              ` : ''}
+
+                              <!-- Fila para agregar subtarea a esta subtarea -->
+                              <div class="child-add-row">
+                                <input 
+                                  type="text" 
+                                  class="child-add-input" 
+                                  placeholder="+ Subtarea para '${escapeHTML(s.title)}'..."
+                                  onkeydown="if(event.key==='Enter'){event.preventDefault(); window.TaskFlowApp.handleAddChildSubtask('${task.id}', '${s.id}', this);}"
+                                />
+                                <button 
+                                  type="button" 
+                                  class="child-add-btn" 
+                                  onclick="window.TaskFlowApp.handleAddChildSubtask('${task.id}', '${s.id}', this.previousElementSibling)"
+                                  title="Añadir subtarea anidada"
+                                >
+                                  + Añadir
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  ` : ''}
+
+                  <!-- Campo rápido para agregar subtarea principal -->
+                  <div class="subtask-add-row">
+                    <input 
+                      type="text" 
+                      class="subtask-add-input" 
+                      placeholder="+ Añadir subtarea (Enter para guardar)..." 
+                      onkeydown="if(event.key==='Enter'){event.preventDefault(); window.TaskFlowApp.handleAddSubtaskInline('${task.id}', this);}" 
+                    />
+                    <button 
+                      type="button" 
+                      class="subtask-add-btn" 
+                      onclick="window.TaskFlowApp.handleAddSubtaskInline('${task.id}', this.previousElementSibling)"
+                      title="Añadir subtarea"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                      <span>Añadir</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="task-meta">
+                  <span class="meta-tag tag-category" style="--cat-color: ${catInfo.color}">
+                    ${escapeHTML(catInfo.label)}
+                  </span>
+                  <span class="meta-tag tag-priority" style="--prio-color: ${prioColor}; --prio-bg: ${prioBg}">
+                    ${prioLabel}
+                  </span>
+                  ${totalSub > 0 ? `
+                    <span 
+                      class="meta-tag meta-tag-subtask-summary" 
+                      onclick="window.TaskFlowApp.toggleCollapseTask('${task.id}')"
+                      style="background: rgba(99, 102, 241, 0.12); color: var(--accent); border: 1px solid rgba(99, 102, 241, 0.25); cursor: pointer;"
+                      title="${isCollapsed ? 'Clic para expandir subtareas' : 'Clic para minimizar subtareas'}"
+                    >
+                      📋 ${doneSub}/${totalSub} subtareas ${isCollapsed ? '▸' : '▾'}
+                    </span>
+                  ` : ''}
+                  ${reminderMeta ? `
+                    <span class="tag-reminder ${reminderMeta.statusClass}" title="${reminderMeta.tooltip}">
+                      ${reminderMeta.text}
+                    </span>
+                  ` : ''}
+                  ${task.dueDate ? `
+                    <span class="tag-due ${isOverdue ? 'overdue' : ''}" title="Fecha límite">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                      ${task.dueDate}${isOverdue ? ' (Vencida)' : ''}
+                    </span>
+                  ` : ''}
+                </div>
+              </div>
+
+              <!-- Botones de Acción -->
+              <div class="task-actions">
+                <button 
+                  class="action-btn btn-toggle-collapse ${isCollapsed ? 'is-collapsed' : ''}" 
+                  onclick="window.TaskFlowApp.toggleCollapseTask('${task.id}')" 
+                  title="${isCollapsed ? 'Expandir tarea y subtareas' : 'Minimizar tarea (ocultar subtareas)'}"
+                  aria-label="${isCollapsed ? 'Expandir tarea' : 'Minimizar tarea'}"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                ${task.reminderTime && !task.completed ? `
+                  <button 
+                    class="action-btn" 
+                    onclick="window.TaskFlowApp.snoozeTask('${task.id}', 10)" 
+                    title="Posponer alarma 10 minutos"
+                    aria-label="Posponer alarma 10 minutos"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                  </button>
+                ` : ''}
+                <button 
+                  class="action-btn" 
+                  onclick="window.TaskFlowApp.openEditTask('${task.id}')" 
+                  title="Editar tarea"
+                  aria-label="Editar tarea"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+                <button 
+                  class="action-btn btn-delete" 
+                  onclick="window.TaskFlowApp.deleteTask('${task.id}')" 
+                  title="Eliminar tarea"
+                  aria-label="Eliminar tarea"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        listContainer.innerHTML = html;
+      }
+
+      /**
+       * Helper para escapar caracteres HTML peligrosos
+       */
+      function escapeHTML(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      /**
+       * Notificaciones Toast
+       */
+      function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let iconSvg = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        `;
+
+        if (type === 'success') {
+          iconSvg = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--prio-baja)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          `;
+        } else if (type === 'error') {
+          iconSvg = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--prio-alta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          `;
+        }
+
+        toast.innerHTML = `${iconSvg}<span>${escapeHTML(message)}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(10px)';
+          toast.style.transition = 'all 200ms ease';
+          setTimeout(() => toast.remove(), 200);
+        }, 3200);
+      }
+
+      /**
+       * Apertura y cierre de modales
+       */
+      function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+          modal.classList.add('active');
+          const firstInput = modal.querySelector('input:not([type="hidden"]), select');
+          if (firstInput) setTimeout(() => firstInput.focus(), 50);
+        }
+      }
+
+      function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+          modal.classList.remove('active');
+        }
+      }
+
+      // Auto-arranque al cargar el DOM
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      // API Pública
+      return {
+        handleAddTask,
+        toggleTask,
+        toggleCollapseTask,
+        deleteTask,
+        openEditTask,
+        saveEditedTask,
+        setFilter,
+        setCategoryFilter,
+        handleSearch,
+        handleSortChange,
+        requestNotificationPermission,
+        triggerQuickTest,
+        setFormPresetMinutes,
+        setFormPresetTomorrow,
+        snoozeTask,
+        handleAlarmComplete,
+        handleAlarmSnooze,
+        exportTasksJSON,
+        handleImportFile,
+        forceUpdateApp,
+        openModal,
+        closeModal,
+        // Funciones de subtareas (incluyendo sub-subtareas jerárquicas) y persistencia en vivo
+        addDraftSubtask,
+        addDraftChildSubtaskPrompt,
+        removeDraftSubtask,
+        clearFormDraft,
+        handleAddSubtaskInline,
+        handleAddChildSubtask,
+        promptAddChildSubtask,
+        toggleSubtask,
+        deleteSubtask,
+        addModalSubtask,
+        addModalChildSubtask,
+        addModalChildSubtaskPrompt,
+        toggleModalSubtask,
+        deleteModalSubtask,
+        toggleTheme,
+        setTheme
+      };
+    })();
+  </script>
 </body>
 </html>
+
